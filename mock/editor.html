@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: #1a1b26;
+            color: #a9b1d6;
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 100vh;
+            gap: 1px;
+            background: #2f334d;
+        }
+
+        .editor-pane, .preview-pane {
+            background: #1a1b26;
+            padding: 1.5rem;
+        }
+
+        .editor-content {
+            font-family: 'JetBrains Mono', monospace;
+            width: 100%;
+            height: calc(100vh - 80px);
+            background: transparent;
+            border: none;
+            color: #a9b1d6;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+        }
+
+        .editor-content:focus {
+            outline: none;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tool-button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            background: #24283b;
+            color: #7aa2f7;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tool-button:hover {
+            background: #2f334d;
+        }
+
+        .preview-content {
+            color: #a9b1d6;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3 {
+            color: #7aa2f7;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-pane">
+            <div class="toolbar">
+                <button class="tool-button">B</button>
+                <button class="tool-button">I</button>
+                <button class="tool-button">#</button>
+                <button class="tool-button">-</button>
+            </div>
+            <textarea class="editor-content" placeholder="Start writing..."></textarea>
+        </div>
+        <div class="preview-pane">
+            <div class="preview-content">
+                <h1>Preview</h1>
+                <p>Your markdown preview will appear here...</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

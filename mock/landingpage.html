@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: #1a1b26;
+            color: #a9b1d6;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem 2rem;
+            background: rgba(26, 27, 38, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .btn-outline {
+            border: 1px solid #7aa2f7;
+            color: #7aa2f7;
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: rgba(122, 162, 247, 0.1);
+        }
+
+        .btn-primary {
+            background: #7aa2f7;
+            color: #ffffff;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #5d8af3;
+        }
+
+        .hero {
+            position: relative;
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+            margin: 0 auto;
+            overflow: hidden;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #1a1b26; /* 背景色を本体と同じに */
+            width: 100%; /* 幅を100%に */
+            max-width: none; /* max-widthを解除 */
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(122, 162, 247, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(122, 162, 247, 0.05) 0%, transparent 50%);
+            z-index: -2;
+        }
+
+        .graph-background {
+            position: fixed; /* absoluteからfixedに変更 */
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            opacity: 0.1;
+            width: 100vw; /* ビューポート幅いっぱいに */
+            height: 100vh; /* ビューポート高さいっぱいに */
+        }
+
+        .graph-node {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #7aa2f7;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(122, 162, 247, 0.3);
+        }
+
+        .graph-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #7aa2f7, transparent);
+            opacity: 0.2;
+            transform-origin: left center;
+        }
+
+        .hero-title {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            color: rgba(169, 177, 214, 0.8);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .features {
+            padding: 4rem 2rem;
+            background: #24283b;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 16px;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            color: #7aa2f7;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .feature-description {
+            line-height: 1.6;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 1rem;
+            }
+            
+            .nav-buttons {
+                gap: 0.5rem;
+            }
+            
+            .btn {
+                padding: 0.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">BANSHO</div>
+        <div class="nav-buttons">
+            <button class="btn btn-outline">ログイン</button>
+            <button class="btn btn-primary">アカウント作成</button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="graph-background"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">知識を、立体的に。</h1>
+            <p class="hero-subtitle">
+                BANSHOは、あなたのメモや知識を3次元で可視化し、新しい気づきを与える次世代のナレッジマネジメントツールです。
+            </p>
+            <button class="btn btn-primary">無料で始める</button>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-title">3次元での知識の可視化</div>
+                <p class="feature-description">
+                    メモ同士のつながりを立体的に表示し、知識の関係性を直感的に理解できます。
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-title">シンプルな操作性</div>
+                <p class="feature-description">
+                    Markdownに対応したエディターで、素早く効率的にメモを取ることができます。
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-title">AIによる知識の連携</div>
+                <p class="feature-description">
+                    AIが自動的にメモ同士の関連性を分析し、新しい発見をサポートします。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const background = document.querySelector('.graph-background');
+            
+            // ノードとラインの生成
+            for (let i = 0; i < 20; i++) {
+                const node = document.createElement('div');
+                node.className = 'graph-node';
+                node.style.left = `${Math.random() * 100}%`;
+                node.style.top = `${Math.random() * 100}%`;
+                background.appendChild(node);
+
+                const line = document.createElement('div');
+                line.className = 'graph-line';
+                line.style.width = `${50 + Math.random() * 100}px`;
+                line.style.left = `${Math.random() * 100}%`;
+                line.style.top = `${Math.random() * 100}%`;
+                line.style.transform = `rotate(${Math.random() * 360}deg)`;
+                background.appendChild(line);
+            }
+        });
+    </script>
+</body>
+</html>

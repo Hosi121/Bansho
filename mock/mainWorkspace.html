@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: #1a1b26;
+            color: #a9b1d6;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 240px 1fr 320px;
+            height: 100vh;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: rgba(26, 27, 38, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 100;
+        }
+
+        .search-container {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 16px 8px 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(122, 162, 247, 0.5);
+            outline: none;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #565f89;
+        }
+
+        .sidebar {
+            background: #24283b;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tree-view {
+            padding: 16px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tree-item {
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tree-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tree-item.active {
+            background: rgba(122, 162, 247, 0.1);
+            color: #7aa2f7;
+        }
+
+        .main-content {
+            background: #1a1b26;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(122, 162, 247, 0.05) 0%, transparent 70%);
+        }
+
+        .node {
+            position: absolute;
+            background: rgba(122, 162, 247, 0.1);
+            border: 1px solid rgba(122, 162, 247, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7aa2f7;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .node:hover {
+            transform: scale(1.1);
+            background: rgba(122, 162, 247, 0.2);
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .detail-panel {
+            background: #24283b;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px;
+        }
+
+        .detail-header {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .detail-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #7aa2f7;
+            margin-bottom: 8px;
+        }
+
+        .detail-meta {
+            font-size: 12px;
+            color: #565f89;
+        }
+
+        .tag-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .tag {
+            background: rgba(122, 162, 247, 0.1);
+            color: #7aa2f7;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<header class="header">
+    <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" placeholder="ドキュメントを検索...">
+    </div>
+</header>
+<body>
+    <div class="workspace">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="tree-item active">全てのドキュメント</div>
+            </div>
+            <div class="tree-view">
+                <div class="tree-item">最近の編集</div>
+                <div class="tree-item">お気に入り</div>
+                <div class="tree-item">プロジェクト</div>
+                <div class="tree-item">タグ</div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="canvas-container">
+                <!-- ノードは JavaScript で動的に生成 -->
+            </div>
+            <div class="controls">
+                <button class="control-btn">+</button>
+                <button class="control-btn">-</button>
+                <button class="control-btn">↺</button>
+            </div>
+        </main>
+
+        <aside class="detail-panel">
+            <div class="detail-header">
+                <div class="detail-title">プロジェクト概要</div>
+                <div class="detail-meta">最終更新: 2024/02/01</div>
+                <div class="tag-list">
+                    <span class="tag">プロジェクト</span>
+                    <span class="tag">企画</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // ノードの生成とアニメーション
+        const canvasContainer = document.querySelector('.canvas-container');
+        
+        function createNode(x, y, label) {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            node.textContent = label;
+            return node;
+        }
+
+        function initializeNodes() {
+            const centerX = canvasContainer.offsetWidth / 2;
+            const centerY = canvasContainer.offsetHeight / 2;
+            
+            // サンプルノードの生成
+            for (let i = 0; i < 10; i++) {
+                const angle = (i / 10) * Math.PI * 2;
+                const radius = 150;
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+                const node = createNode(x, y, `${i + 1}`);
+                canvasContainer.appendChild(node);
+            }
+        }
+
+        window.addEventListener('load', initializeNodes);
+    </script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: #1a1b26;
+            color: #a9b1d6;
+        }
+
+        .search-container {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh;
+            padding-top: 64px;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: rgba(26, 27, 38, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            z-index: 100;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .filters {
+            background: #24283b;
+            padding: 24px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            height: 100%;
+        }
+
+        .filter-section {
+            margin-bottom: 24px;
+        }
+
+        .filter-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #7aa2f7;
+            margin-bottom: 12px;
+        }
+
+        .filter-option {
+            padding: 8px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #a9b1d6;
+        }
+
+        .results {
+            padding: 24px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .result-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #7aa2f7;
+            margin-bottom: 8px;
+        }
+
+        .result-preview {
+            font-size: 14px;
+            color: #a9b1d6;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .result-meta {
+            font-size: 12px;
+            color: #565f89;
+            display: flex;
+            gap: 16px;
+        }
+
+        .tag {
+            background: rgba(122, 162, 247, 0.1);
+            color: #7aa2f7;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="ドキュメントを検索...">
+        </div>
+    </header>
+
+    <div class="search-container">
+        <aside class="filters">
+            <div class="filter-section">
+                <div class="filter-title">期間</div>
+                <div class="filter-option">今日</div>
+                <div class="filter-option">過去7日</div>
+                <div class="filter-option">過去30日</div>
+                <div class="filter-option">すべて</div>
+            </div>
+            <div class="filter-section">
+                <div class="filter-title">タグ</div>
+                <div class="filter-option">プロジェクト</div>
+                <div class="filter-option">アイデア</div>
+                <div class="filter-option">タスク</div>
+                <div class="filter-option">メモ</div>
+            </div>
+        </aside>
+
+        <main class="results">
+            <div class="result-card">
+                <div class="result-title">Webデザイン</div>
+                <div class="result-preview">
+                    講義メモ
+                </div>
+                <div class="result-meta">
+                    <span>2024/02/01</span>
+                    <span class="tag">プロジェクト</span>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <div class="result-title">インタビュースキルズ</div>
+                <div class="result-preview">
+                    講義メモ
+                </div>
+                <div class="result-meta">
+                    <span>2024/01/28</span>
+                    <span class="tag">アイデア</span>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <div class="result-title">社会モデル</div>
+                <div class="result-preview">
+                    講義メモ
+                </div>
+                <div class="result-meta">
+                    <span>2024/01/25</span>
+                    <span class="tag">メモ</span>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
