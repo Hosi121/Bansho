@@ -9,7 +9,8 @@ func SetupRoutes() *gin.Engine {
 
 	api := r.Group("/api/v1")
 	{
-		DocumentRoutes(api) // ドキュメント関連のルートを登録
+		RelationRoutes(api) // 関連性を見るルート
+		DocumentRoutes(api) // ドキュメント関連のルート
 	}
 
 	return r
