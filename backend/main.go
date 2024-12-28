@@ -7,6 +7,7 @@ import (
 
 	"github.com/Hosi121/Bansho/config"
 	"github.com/Hosi121/Bansho/migrations"
+	"github.com/Hosi121/Bansho/prompt"
 	"github.com/Hosi121/Bansho/routes"
 )
 
@@ -24,6 +25,8 @@ func main() {
 
 	// マイグレーション実行
 	migrations.RunMigrations()
+
+	prompt.ValidatePromptFile("relation_prompt.json")
 
 	// ルート設定
 	r := routes.SetupRoutes()
