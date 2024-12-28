@@ -17,7 +17,7 @@ import (
 // @BasePath /api/v1
 func main() {
 	// Slogのデフォルトロガーを設定
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout)))
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
 	// データベース接続
 	config.ConnectDB()
