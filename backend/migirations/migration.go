@@ -1,9 +1,10 @@
 package migrations
 
 import (
+	"log/slog"
+
 	"github.com/Hosi121/Bansho/config"
 	"github.com/Hosi121/Bansho/models"
-	"slog"
 )
 
 func RunMigrations() {
@@ -14,4 +15,3 @@ func RunMigrations() {
 	}
 	slog.Info("database migrated successfully")
 }
-

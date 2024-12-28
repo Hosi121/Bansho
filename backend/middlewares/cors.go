@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"os"
 
+	"log/slog"
+
 	"github.com/gin-gonic/gin"
-	"slog"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -38,4 +39,3 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-
