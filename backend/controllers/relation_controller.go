@@ -2,14 +2,13 @@ package controllers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
 
 	"github.com/Hosi121/Bansho/chat"
-	"golang.org/x/exp/slog"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slog"
 )
 
 // プロンプトテンプレートを保持する構造体
@@ -97,4 +96,3 @@ func CalculateRelation(c *gin.Context) {
 		"relation": result.Relation,
 	})
 }
-
