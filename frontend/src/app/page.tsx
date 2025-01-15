@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Network, Search } from 'lucide-react';
 
@@ -37,7 +36,7 @@ export default function Home() {
               BANSHOは、あなたのメモや知識を3次元で可視化し、新しい気づきを与える次世代の知識マネジメントツールです。
             </p>
             <Link 
-              href="/start"
+              href="/register"
               className="inline-flex items-center px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               無料で始める
