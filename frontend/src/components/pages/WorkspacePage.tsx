@@ -66,8 +66,25 @@ const WorkspacePage = () => {
 
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-3rem)]">
-        {renderContent()}
+      <div className="h-[calc(100vh-3rem)] bg-[#1A1B23]">
+        <div className="h-full flex">
+          <aside className="w-[240px] bg-[#232429] border-r border-white/10">
+            <DocumentList
+              documents={documents}
+              selectedId={selectedDocumentId}
+              onSelect={selectDocument}
+            />
+          </aside>
+          <main className="flex-1 bg-[#1A1B23]">
+            <div className="h-full w-full">
+              <KnowledgeGraph
+                data={graphData}
+                onNodeClick={selectDocument}
+                selectedNodeId={selectedDocumentId}
+              />
+            </div>
+          </main>
+        </div>
       </div>
     </AppLayout>
   );
