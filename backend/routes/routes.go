@@ -11,8 +11,8 @@ func SetupRoutes() *gin.Engine {
 	{
 		RelationRoutes(api) // 関連性を見るルート
 		DocumentRoutes(api) // ドキュメント関連のルート
+		AuthRoutes(r)
 	}
 
 	return r
 }
-
