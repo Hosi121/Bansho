@@ -1,18 +1,16 @@
-'use client';
-
 import { useState, useCallback, useEffect } from 'react';
+import { redirect } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
-import { redirect } from 'next/navigation';  // useRouterの代わりにredirectを使用
-import { User, LoginCredentials, RegisterCredentials, JWTPayload } from '@/types/auth';
+import { loginAPI, registerAPI } from '@/libs/api/auth';
+import type { User, LoginCredentials, RegisterCredentials } from '@/types/auth';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // トークンの検証
   const validateToken = useCallback((token: string) => {
     try {
-      const decoded = jwtDecode<JWTPayload>(token);
+      const decoded = jwtDecode(token) as { exp: number };
       if (decoded.exp * 1000 < Date.now()) {
         return false;
       }
@@ -22,16 +20,20 @@ export const useAuth = () => {
     }
   }, []);
 
-  // 初期化時にローカルストレージのトークンをチェック
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token && validateToken(token)) {
-      const decoded = jwtDecode<JWTPayload>(token);
-      setUser({
-        id: decoded.sub,
-        email: decoded.email,
-        name: decoded.name
-      });
+      // トークンが有効な場合、ユーザー情報を設定
+      try {
+        const decoded = jwtDecode(token) as any;
+        setUser({
+          id: decoded.id,
+          name: decoded.name,
+          email: decoded.email
+        });
+      } catch {
+        localStorage.removeItem('token');
+      }
     } else {
       localStorage.removeItem('token');
     }
@@ -40,43 +42,35 @@ export const useAuth = () => {
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     try {
-      // 実際のAPI呼び出しに置き換える必要がある
-      const mockResponse = {
-        token: 'mock_jwt_token',
-        user: {
-          id: '1',
-          email: credentials.email,
-          name: 'Test User'
-        }
-      };
-
-      localStorage.setItem('token', mockResponse.token);
-      setUser(mockResponse.user);
-      redirect('/workspace');
+      setLoading(true);
+      const response = await loginAPI(credentials);
+      localStorage.setItem('token', response.token);
+      setUser(response.user);
       return { success: true };
     } catch (error) {
-      return { success: false, error: 'ログインに失敗しました' };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'ログインに失敗しました'
+      };
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   const register = useCallback(async (credentials: RegisterCredentials) => {
     try {
-      // 実際のAPI呼び出しに置き換える必要がある
-      const mockResponse = {
-        token: 'mock_jwt_token',
-        user: {
-          id: '1',
-          email: credentials.email,
-          name: credentials.name
-        }
-      };
-
-      localStorage.setItem('token', mockResponse.token);
-      setUser(mockResponse.user);
-      redirect('/workspace');
+      setLoading(true);
+      const response = await registerAPI(credentials);
+      localStorage.setItem('token', response.token);
+      setUser(response.user);
       return { success: true };
     } catch (error) {
-      return { success: false, error: '登録に失敗しました' };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '登録に失敗しました'
+      };
+    } finally {
+      setLoading(false);
     }
   }, []);
 
