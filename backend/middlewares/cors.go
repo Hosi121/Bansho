@@ -1,41 +1,29 @@
 package middlewares
 
 import (
-	"net/http"
-	"os"
-
-	"log/slog"
-
-	"github.com/gin-gonic/gin"
+    "net/http"
+    "github.com/gin-gonic/gin"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		origin := c.GetHeader("Origin")
-		env := os.Getenv("ENV")
-		allowedOrigin := ""
+    return func(c *gin.Context) {
+        // Allow the specific origin
+        origin := c.Request.Header.Get("Origin")
+        c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+        
+        // Essential CORS headers
+        c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+        c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, X-Requested-By")
+        c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE, PATCH")
+        c.Writer.Header().Set("Access-Control-Max-Age", "86400") // 24 hours
+        c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length")
 
-		if env == "production" {
-			if origin == "https://your-vercel-app.vercel.app" {
-				allowedOrigin = origin
-			}
-		} else {
-			allowedOrigin = "http://localhost:3000"
-		}
+        // Handle preflight requests
+        if c.Request.Method == "OPTIONS" {
+            c.AbortWithStatus(http.StatusNoContent) // 204
+            return
+        }
 
-		if allowedOrigin != "" {
-			slog.Info("CORS allowed", slog.String("origin", allowedOrigin))
-			c.Writer.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
-		} else {
-			slog.Warn("CORS denied", slog.String("origin", origin))
-		}
-
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		if c.Request.Method == http.MethodOptions {
-			c.AbortWithStatus(http.StatusOK)
-			return
-		}
-		c.Next()
-	}
+        c.Next()
+    }
 }
