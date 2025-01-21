@@ -2,20 +2,26 @@
 
 import React, { useState } from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuthContext();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     const result = await login({ email, password });
-    if (!result.success) {
+    if (result.success) {
+      router.push('/workspace');
+    } else {
       setError(result.error || 'ログインに失敗しました');
     }
   };
@@ -74,12 +80,14 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full h-12 bg-[#7B8CDE] text-white rounded-lg font-medium
-              hover:bg-[#8E9DE5] active:bg-[#6B7BD0]
-              transition-all duration-200 transform hover:scale-[1.02]
-              focus:outline-none focus:ring-2 focus:ring-[#7B8CDE]/50"
+            disabled={isLoading}
+            className={`w-full h-12 bg-[#7B8CDE] text-white rounded-lg font-medium
+          hover:bg-[#8E9DE5] active:bg-[#6B7BD0]
+          transition-all duration-200 transform hover:scale-[1.02]
+          focus:outline-none focus:ring-2 focus:ring-[#7B8CDE]/50
+          ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            ログイン
+            {isLoading ? 'ログイン中...' : 'ログイン'}
           </button>
         </form>
 

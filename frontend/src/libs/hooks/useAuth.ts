@@ -1,12 +1,37 @@
 import { useState, useCallback, useEffect } from 'react';
-import { redirect } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
+import { DecodedToken } from '@/types/auth';
 import { loginAPI, registerAPI } from '@/libs/api/auth';
+import { useRouter } from 'next/navigation';
 import type { User, LoginCredentials, RegisterCredentials } from '@/types/auth';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    try {
+      setLoading(true);
+      const response = await loginAPI(credentials);
+      // クッキーは loginAPI 内で設定されるので、ここでは user 情報だけ保存
+      setUser(response.user);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'ログインに失敗しました'
+      };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+const logout = useCallback(() => {
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    setUser(null);
+    router.push('/login');
+}, [router]);
 
   const validateToken = useCallback((token: string) => {
     try {
@@ -25,7 +50,7 @@ export const useAuth = () => {
     if (token && validateToken(token)) {
       // トークンが有効な場合、ユーザー情報を設定
       try {
-        const decoded = jwtDecode(token) as any;
+        const decoded = jwtDecode(token) as DecodedToken;
         setUser({
           id: decoded.id,
           name: decoded.name,
@@ -39,23 +64,6 @@ export const useAuth = () => {
     }
     setLoading(false);
   }, [validateToken]);
-
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    try {
-      setLoading(true);
-      const response = await loginAPI(credentials);
-      localStorage.setItem('token', response.token);
-      setUser(response.user);
-      return { success: true };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'ログインに失敗しました'
-      };
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   const register = useCallback(async (credentials: RegisterCredentials) => {
     try {
@@ -72,12 +80,6 @@ export const useAuth = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    setUser(null);
-    redirect('/login');
   }, []);
 
   return {

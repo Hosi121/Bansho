@@ -8,18 +8,24 @@ export const loginAPI = async (credentials: LoginCredentials): Promise<AuthRespo
         headers: {
             'Content-Type': 'application/json',
         },
-        mode: 'cors',
-        credentials: 'include',
+        credentials: 'include',  // これは重要
         body: JSON.stringify(credentials),
     });
 
     if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Login failed');
+        throw new Error(errorData.error || 'ログインに失敗しました');
     }
 
-    return response.json();
+    const data = await response.json();
+    
+    // クッキーにトークンを設定
+    document.cookie = `token=${data.token}; path=/; max-age=86400; secure; samesite=strict`;
+    
+    return data;
 };
+
+
 
 export const registerAPI = async (credentials: RegisterCredentials): Promise<AuthResponse> => {
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {

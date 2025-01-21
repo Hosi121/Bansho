@@ -294,34 +294,6 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({
       }
     };    
 
-    const handleNodeClick = (nodeId: string) => {
-      const clickedNode = nodeObjectsRef.current.find(node => node.userData.id === nodeId);
-      if (clickedNode && controlsRef.current) {
-        const { x, y, z } = clickedNode.position;
-  
-        // カメラのスムーズな移動
-        gsap.to(camera.position, {
-          x: x + 3,
-          y: y + 3,
-          z: z + 5,
-          duration: 1.5,
-          onUpdate: () => {
-            controlsRef.current?.update();
-          }
-        });
-  
-        // OrbitControls のターゲット更新
-        gsap.to(controlsRef.current.target, {
-          x: x,
-          y: y,
-          z: z,
-          duration: 1.5
-        });
-      }
-  
-      onNodeClick(nodeId); // 他の選択処理も引き継ぐ
-    };
-
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);

@@ -4,6 +4,15 @@ export interface User {
     name: string;
     avatar?: string;
   }
+
+  export interface DecodedToken {
+    id: string;
+    name: string;
+    email: string;
+    exp: number;
+    iat: number;
+  }
+  
   
   export interface LoginCredentials {
     email: string;
