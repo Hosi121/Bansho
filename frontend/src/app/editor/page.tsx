@@ -7,6 +7,12 @@ import Viewer from "@/components/editor/Viewer";
 import { Document } from "@/types/document";
 import AppLayout from "@/components/common/layout/AppLayout";
 
+type UpdateableDocumentField = {
+  title: string;
+  tags: string[];
+  content: string;
+};
+
 const EditorPage: React.FC = () => {
   const [document, setDocument] = useState<Document>({
     id: "",
@@ -17,7 +23,10 @@ const EditorPage: React.FC = () => {
     updatedAt: new Date(),
   });
 
-  const updateDocument = (field: keyof Document, value: any) => {
+  const updateDocument = <K extends keyof UpdateableDocumentField>(
+    field: K,
+    value: UpdateableDocumentField[K]
+  ) => {
     setDocument((prev) => ({
       ...prev,
       [field]: value,
