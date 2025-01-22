@@ -1,7 +1,7 @@
-// components/workspace/DocumentList.tsx
 import React from 'react';
 import { File, Plus, FolderIcon } from 'lucide-react';
 import { Document } from '@/types/document';
+import { useRouter } from 'next/navigation';
 
 interface DocumentListProps {
     documents: Document[];
@@ -10,13 +10,18 @@ interface DocumentListProps {
 }
 
 const DocumentList = ({ documents, selectedId, onSelect }: DocumentListProps) => {
+    const router = useRouter();
+    const handleCreateNewDocument = () => {
+        router.push('/editor');
+    };
     return (
         <div className="flex flex-col h-full">
             {/* New Document Button */}
             <div className="p-4">
                 <button className="w-full h-10 bg-[#7B8CDE] hover:bg-[#8E9DE5] text-white rounded-lg 
                     flex items-center justify-center text-sm font-medium transition-all duration-200 
-                    transform hover:scale-[1.02] active:bg-[#6B7BD0]">
+                    transform hover:scale-[1.02] active:bg-[#6B7BD0]"
+                    onClick={handleCreateNewDocument}>
                     <Plus size={18} className="mr-2" strokeWidth={2.5} />
                     新しい文書を作成
                 </button>
