@@ -12,15 +12,6 @@ const Toolbar: React.FC<ToolbarProps> = ({ title, setTitle, tags, setTags }) => 
     const [newTag, setNewTag] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
-    const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' && newTag.trim()) {
-            if (!tags.includes(newTag.trim())) {
-                setTags([...tags, newTag.trim()]);
-            }
-            setNewTag("");
-        }
-    };
-
     const handleRemoveTag = (tagToRemove: string) => {
         setTags(tags.filter(tag => tag !== tagToRemove));
     };
@@ -29,6 +20,16 @@ const Toolbar: React.FC<ToolbarProps> = ({ title, setTitle, tags, setTags }) => 
         setIsSaving(true);
         // ここで保存処理を実装
         setTimeout(() => setIsSaving(false), 1000);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && !e.repeat && newTag.trim()) {
+            e.preventDefault();
+            if (!tags.includes(newTag.trim())) {
+                setTags([...tags, newTag.trim()]);
+            }
+            setNewTag("");
+        }
     };
 
     return (
@@ -80,10 +81,10 @@ const Toolbar: React.FC<ToolbarProps> = ({ title, setTitle, tags, setTags }) => 
                             placeholder="新しいタグを追加 (Enter)"
                             value={newTag}
                             onChange={(e) => setNewTag(e.target.value)}
-                            onKeyPress={handleAddTag}
+                            onKeyDown={handleKeyDown}
                             className="px-3 py-1 bg-[#2A2B32] text-white placeholder-gray-400 
-                border border-white/10 rounded-full text-sm
-                focus:outline-none focus:ring-2 focus:ring-[#7B8CDE]/50"
+    border border-white/10 rounded-full text-sm
+    focus:outline-none focus:ring-2 focus:ring-[#7B8CDE]/50"
                         />
                         {newTag && (
                             <button
