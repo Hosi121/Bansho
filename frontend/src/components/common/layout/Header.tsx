@@ -76,12 +76,14 @@ const Header = () => {
 
               <div className="py-1">
                 <button
+                  onClick={() => router.push('/profile')}
                   className="w-full px-4 py-2 text-left text-sm text-gray-200 hover:bg-white/5 flex items-center gap-2"
                 >
                   <User size={16} className="text-gray-400" />
                   マイページ
                 </button>
                 <button
+                  onClick={() => router.push('/settings')}
                   className="w-full px-4 py-2 text-left text-sm text-gray-200 hover:bg-white/5 flex items-center gap-2"
                 >
                   <Settings size={16} className="text-gray-400" />
