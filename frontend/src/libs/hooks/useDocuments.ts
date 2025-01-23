@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Document, DocumentGraphData } from '@/types/document';
 
 // モックデータ
-const MOCK_DOCUMENTS: Document[] = [
+export const MOCK_DOCUMENTS: Document[] = [
     {
         id: '1',
         title: "研究プロジェクトA",
