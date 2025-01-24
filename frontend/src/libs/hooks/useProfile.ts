@@ -28,7 +28,8 @@ export const useProfile = () => {
       setIsEditing(false);
       setError('');
     } catch (err) {
-      setError('プロフィールの更新に失敗しました');
+      const error = err instanceof Error ? err.message : 'プロフィールの更新に失敗しました';
+      setError(error);
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +48,8 @@ export const useProfile = () => {
         });
       }
     } catch (err) {
-      setError('アバターの更新に失敗しました');
+      const error = err instanceof Error ? err.message : 'アバターの更新に失敗しました';
+      setError(error);
     } finally {
       setIsLoading(false);
     }
