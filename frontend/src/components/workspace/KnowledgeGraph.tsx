@@ -26,8 +26,8 @@ const COLORS = {
     GLOW: 0x7B8CDE
   },
   EDGE: {
-    DEFAULT: 0x2A2B32,
-    ACTIVE: 0x7B8CDE
+    DEFAULT: 0xFFFFFF,
+    ACTIVE: 0xFFFFFF
   }
 };
 
