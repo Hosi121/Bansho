@@ -24,7 +24,7 @@ const Header = () => {
         <button
           onClick={() => router.push('/workspace')}
           className="text-lg text-white font-medium hover:text-[#7B8CDE] transition-colors">
-          Bansho
+          BANSHO
         </button>
 
         <div className="flex-1 max-w-2xl mx-4">
