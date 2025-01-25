@@ -21,33 +21,33 @@ func ConnectDB() {
 		slog.Warn("No .env file found, using system environment variables")
 	}
 
-	// インスタンス接続名とその他情報を環境変数から取得
-	instanceConnName := os.Getenv("DB_INSTANCE_CONNECTION_NAME")
-	dbUser := os.Getenv("DB_USER")
-	dbPass := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
+	// 環境変数からDB接続情報を取得 (Private IPの場合)
+	dbHost := os.Getenv("DB_HOST")     // 例: 10.123.45.67
+	dbPort := os.Getenv("DB_PORT")     // 例: 5432
+	dbUser := os.Getenv("DB_USER")     // 例: postgres
+	dbPass := os.Getenv("DB_PASSWORD") // 例: xxxxx
+	dbName := os.Getenv("DB_NAME")     // 例: bansho
 
-	// Cloud SQL Unix ソケット用 DSN
+	// DSNを生成 (host + port + user + password + dbname)
 	dsn := fmt.Sprintf(
-		"host=/cloudsql/%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Tokyo",
-		instanceConnName,
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Tokyo",
+		dbHost,
+		dbPort,
 		dbUser,
 		dbPass,
 		dbName,
 	)
 
-	// DSN をログに出力（パスワードは実運用で見えないようにするか注意）
+	// DSN をログに出力
 	log.Printf("Generated DSN: %s", dsn)
 
-	// GORM で DB 接続
+	// GORMでDB接続
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		slog.Error("failed to connect to database", slog.String("error", err.Error()))
 		log.Fatalf("Error connecting to database: %v", err)
 	}
 
-	slog.Info("database connected successfully",
-		slog.String("instance_connection_name", instanceConnName),
-	)
+	slog.Info("database connected successfully", slog.String("host", dbHost))
 	log.Println("Database connection established successfully.")
 }
