@@ -9,6 +9,7 @@ import (
 	"github.com/Hosi121/Bansho/migrations"
 	"github.com/Hosi121/Bansho/prompt"
 	"github.com/Hosi121/Bansho/routes"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -25,6 +26,12 @@ func main() {
 	prompt.ValidatePromptFile("relation_prompt.json")
 
 	// ルート設定
+
+	err := godotenv.Load()
+	if err != nil {
+		slog.Warn("No .env file found (this is expected in Cloud Run)")
+	}
+
 	// config.DB が nil でないかを確認しつつ、routes.SetupRoutes へ渡す
 	db := config.DB
 	if db == nil {

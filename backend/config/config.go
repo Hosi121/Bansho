@@ -39,7 +39,7 @@ func ConnectDB() {
 	)
 
 	// DSN をログに出力
-	log.Printf("Generated DSN: %s", dsn)
+	log.Printf("Connecting to DB: host=%s dbname=%s", dbHost, dbName)
 
 	// GORMでDB接続
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
