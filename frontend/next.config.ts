@@ -6,46 +6,29 @@ const nextConfig: NextConfig = {
       {
         source: '/api/v1/:path*',
         destination: 'http://localhost:8080/api/v1/:path*',
-        basePath: false,
       }
     ]
   },
 
+  // CORSヘッダーの設定は残す
   async headers() {
     return [
       {
-        // Change the source pattern to match your rewrite rule
-        source: '/api/v1/:path*',
+        source: '/api/:path*',
         headers: [
-          { 
-            key: 'Access-Control-Allow-Credentials', 
-            value: 'true' 
-          },
-          { 
-            key: 'Access-Control-Allow-Origin', 
-            value: 'http://localhost:3000' // Replace with your frontend URL
-          },
-          { 
-            key: 'Access-Control-Allow-Methods', 
-            value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT,HEAD' 
-          },
-          { 
-            key: 'Access-Control-Allow-Headers', 
-            value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-          },
-          {
-            key: 'Access-Control-Max-Age',
-            value: '86400' // 24 hours
-          }
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
+          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization' },
         ],
       }
     ]
   },
-  
-  // Add this to ensure proper handling of CORS
+
+  // redirectsを空の配列に設定して、リダイレクトを無効化
   async redirects() {
-    return [];
-  },
+    return []
+  }
 };
 
 export default nextConfig;

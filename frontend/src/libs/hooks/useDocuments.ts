@@ -1,103 +1,106 @@
-import { useState, useCallback } from 'react';
-import { Document, DocumentGraphData } from '@/types/document';
+import { useState, useCallback, useEffect } from 'react';
+import { Document, DocumentGraphData, DocumentNode, DocumentEdge } from '@/types/document';
+import * as documentAPI from '@/libs/api/document';
 
-// モックデータ
-export const MOCK_DOCUMENTS: Document[] = [
-    {
-        id: '1',
-        title: "研究プロジェクトA",
-        content: "研究プロジェクトAの詳細な内容です。AIを活用した新しい手法の開発について...",
-        excerpt: "AIを活用した新しい研究プロジェクト",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        tags: ["研究", "AI", "プロジェクト"]
-    },
-    {
-        id: '2',
-        title: "週次ミーティング議事録",
-        content: "週次ミーティングの詳細な議事録。進捗状況の確認と今後の計画について...",
-        excerpt: "プロジェクトの進捗状況の確認",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        tags: ["ミーティング", "週次"]
-    },
-    {
-        id: '3',
-        title: "技術仕様書",
-        content: "システムの技術仕様書の詳細。アーキテクチャ設計と実装方針について...",
-        excerpt: "新システムの技術仕様の概要",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        tags: ["技術", "仕様"]
+const generateGraphLayout = (documents: Document[]): DocumentGraphData => {
+  // 円形レイアウトの生成
+  const radius = 5;  // 円の半径
+  const nodes: DocumentNode[] = documents.map((doc, index) => {
+    const angle = (2 * Math.PI * index) / documents.length;
+    return {
+      id: doc.id,
+      position: {
+        x: radius * Math.cos(angle),
+        y: radius * Math.sin(angle),
+        z: 0
+      },
+      title: doc.title,
+      documentInfo: doc
+    };
+  });
+
+  // 初期のエッジを生成
+  const edges: DocumentEdge[] = [];
+  for (let i = 0; i < documents.length; i++) {
+    for (let j = i + 1; j < documents.length; j++) {
+      // タグの共通性に基づいて初期の関連度を設定
+      const commonTags = documents[i].tags.filter(tag => 
+        documents[j].tags.includes(tag)
+      );
+      const initialStrength = commonTags.length > 0 ? 0.3 : 0.1;
+      
+      edges.push({
+        id: `e${i}-${j}`,
+        sourceId: documents[i].id,
+        targetId: documents[j].id,
+        strength: initialStrength
+      });
     }
-];
+  }
 
-const createMockGraphData = (documents: Document[]): DocumentGraphData => {
-    // ノードの位置をランダムに生成
-    const nodes = documents.map(doc => ({
-        id: doc.id,
-        position: {
-            x: (Math.random() - 0.5) * 6,  // -3 から 3 の範囲
-            y: (Math.random() - 0.5) * 6,
-            z: (Math.random() - 0.5) * 6
-        },
-        title: doc.title,
-        documentInfo: doc
-    }));
-
-    // 簡単なエッジを生成（すべてのノードを順番につなぐ）
-    const edges = nodes.slice(0, -1).map((node, index) => ({
-        id: `e${index}`,
-        sourceId: node.id,
-        targetId: nodes[index + 1].id,
-        strength: 0.5 + Math.random() * 0.5  // 0.5 から 1.0 の範囲
-    }));
-
-    // 追加のエッジを生成（最初と最後のノードを接続）
-    if (nodes.length > 2) {
-        edges.push({
-            id: `e${edges.length}`,
-            sourceId: nodes[0].id,
-            targetId: nodes[nodes.length - 1].id,
-            strength: 0.5 + Math.random() * 0.5
-        });
-    }
-
-    return { nodes, edges };
+  return { nodes, edges };
 };
 
 export const useDocuments = () => {
-    const [documents, setDocuments] = useState<Document[]>([]);
-    const [graphData, setGraphData] = useState<DocumentGraphData>({ nodes: [], edges: [] });
-    const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [graphData, setGraphData] = useState<DocumentGraphData>({ nodes: [], edges: [] });
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const fetchDocuments = useCallback(async () => {
-        setIsLoading(true);
+  const fetchDocuments = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const docs = await documentAPI.getDocuments();
+      setDocuments(docs);
+      
+      // グラフデータを生成
+      const graph = generateGraphLayout(docs);
+      setGraphData(graph);
+
+      // 文書間の関連性を計算して更新
+      const updatedEdges = [...graph.edges];
+      for (const edge of updatedEdges) {
         try {
-            // モックデータを使用
-            await new Promise(resolve => setTimeout(resolve, 500)); // ローディング表示のために遅延を追加
-            setDocuments(MOCK_DOCUMENTS);
-            setGraphData(createMockGraphData(MOCK_DOCUMENTS));
-        } catch (error) {
-            console.error('Failed to fetch documents:', error);
-        } finally {
-            setIsLoading(false);
+          const relation = await documentAPI.calculateRelation(
+            documents.find(d => d.id === edge.sourceId)?.content || '',
+            documents.find(d => d.id === edge.targetId)?.content || ''
+          );
+          edge.strength = relation;
+        } catch (err) {
+          console.warn('Failed to calculate relation:', err);
+          // エッジの関連度は初期値のまま
         }
-    }, []);
+      }
+      
+      setGraphData(prev => ({ ...prev, edges: updatedEdges }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch data');
+      console.error('Failed to fetch documents:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [documents]);
 
-    const selectDocument = useCallback((id: string) => {
-        setSelectedDocumentId(id);
-    }, []);
+  const selectDocument = useCallback((id: string) => {
+    setSelectedDocumentId(id);
+  }, []);
 
-    return {
-        documents,
-        graphData,
-        selectedDocumentId,
-        isLoading,
-        fetchDocuments,
-        selectDocument
-    };
+  // コンポーネントマウント時にデータを取得
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  return {
+    documents,
+    graphData,
+    selectedDocumentId,
+    isLoading,
+    error,
+    fetchDocuments,
+    selectDocument
+  };
 };
 
 export type UseDocumentsReturn = ReturnType<typeof useDocuments>;
