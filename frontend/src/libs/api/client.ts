@@ -1,6 +1,7 @@
 export async function authenticatedFetch(
     url: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    onUnauthorized: () => void
   ) {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -17,9 +18,9 @@ export async function authenticatedFetch(
     });
   
     if (response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      if(onUnauthorized) {
+        onUnauthorized();
+      }
       throw new Error('認証が切れました');
     }
   
