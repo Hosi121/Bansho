@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import AppLayout from '@/components/common/layout/AppLayout';
 import KnowledgeGraph from '@/components/workspace/KnowledgeGraph';
 import DocumentList from '@/components/workspace/DocumentList';
+import EmptyState from '@/components/workspace/EmptyState';
 import { useDocuments } from '@/libs/hooks/useDocuments';
 
 const WorkspacePage = () => {
@@ -13,14 +14,8 @@ const WorkspacePage = () => {
     selectedDocumentId,
     isLoading,
     error,
-    fetchDocuments,
     selectDocument
   } = useDocuments();
-
-  // 依存配列を空にして初回のみ実行されるようにする
-  useEffect(() => {
-    fetchDocuments();
-  }, []); // ← fetchDocuments を依存配列から削除
 
   if (error) {
     return (
@@ -40,6 +35,14 @@ const WorkspacePage = () => {
         <div className="h-[calc(100vh-3rem)] bg-[#1A1B23] flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#7B8CDE]" />
         </div>
+      </AppLayout>
+    );
+  }
+
+  if (documents.length === 0) {
+    return (
+      <AppLayout>
+        <EmptyState />
       </AppLayout>
     );
   }

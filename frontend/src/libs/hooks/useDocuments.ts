@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useAuth } from '@/libs/hooks/useAuth';
 import { Document, DocumentGraphData, DocumentNode, DocumentEdge } from '@/types/document';
 import * as documentAPI from '@/libs/api/document';
 
+// 円形レイアウトでノードの初期位置を生成
 const generateGraphLayout = (documents: Document[]): DocumentGraphData => {
-  // 円形レイアウトの生成
   const radius = 5;  // 円の半径
   const nodes: DocumentNode[] = documents.map((doc, index) => {
     const angle = (2 * Math.PI * index) / documents.length;
@@ -19,21 +20,15 @@ const generateGraphLayout = (documents: Document[]): DocumentGraphData => {
     };
   });
 
-  // 初期のエッジを生成
+  // すべてのノード間にエッジを生成（後で関連度で更新）
   const edges: DocumentEdge[] = [];
   for (let i = 0; i < documents.length; i++) {
     for (let j = i + 1; j < documents.length; j++) {
-      // タグの共通性に基づいて初期の関連度を設定
-      const commonTags = documents[i].tags.filter(tag => 
-        documents[j].tags.includes(tag)
-      );
-      const initialStrength = commonTags.length > 0 ? 0.3 : 0.1;
-      
       edges.push({
-        id: `e${i}-${j}`,
+        id: `${documents[i].id}-${documents[j].id}`,
         sourceId: documents[i].id,
         targetId: documents[j].id,
-        strength: initialStrength
+        strength: 0.1  // 初期の関連度
       });
     }
   }
@@ -42,55 +37,107 @@ const generateGraphLayout = (documents: Document[]): DocumentGraphData => {
 };
 
 export const useDocuments = () => {
+  const { logout } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [graphData, setGraphData] = useState<DocumentGraphData>({ nodes: [], edges: [] });
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ドキュメント一覧の取得
   const fetchDocuments = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const docs = await documentAPI.getDocuments();
-      setDocuments(docs);
       
-      // グラフデータを生成
-      const graph = generateGraphLayout(docs);
-      setGraphData(graph);
+      const token = localStorage.getItem('token');
+      console.log('Token when fetching documents:', token);
 
-      // 文書間の関連性を計算して更新
+      const docs = await documentAPI.getDocuments(logout);
+      setDocuments(docs);
+
+      // グラフデータの初期生成
+      const graph = generateGraphLayout(docs);
+
+      // ドキュメント間の関連度を計算して更新
       const updatedEdges = [...graph.edges];
       for (const edge of updatedEdges) {
         try {
-          const relation = await documentAPI.calculateRelation(
-            documents.find(d => d.id === edge.sourceId)?.content || '',
-            documents.find(d => d.id === edge.targetId)?.content || ''
-          );
-          edge.strength = relation;
+          const sourceDoc = docs.find(d => d.id === edge.sourceId);
+          const targetDoc = docs.find(d => d.id === edge.targetId);
+
+          if (sourceDoc && targetDoc) {
+            const relation = await documentAPI.calculateRelation(
+              sourceDoc.content,
+              targetDoc.content,
+              logout
+            );
+            edge.strength = relation;
+          }
         } catch (err) {
           console.warn('Failed to calculate relation:', err);
-          // エッジの関連度は初期値のまま
+          // エラーが発生しても処理は継続（デフォルトの関連度を使用）
         }
       }
-      
-      setGraphData(prev => ({ ...prev, edges: updatedEdges }));
+
+      setGraphData({ ...graph, edges: updatedEdges });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data');
-      console.error('Failed to fetch documents:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch documents';
+      setError(errorMessage);
+      console.error('Error fetching documents:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [documents]);
+  }, [logout]);
 
+  // 特定のドキュメントを選択
   const selectDocument = useCallback((id: string) => {
     setSelectedDocumentId(id);
   }, []);
 
+  // ドキュメントの作成
+  const createDocument = useCallback(async (document: Omit<Document, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      await documentAPI.createDocument(document, logout);
+      await fetchDocuments(); // 一覧を再取得
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create document';
+      setError(errorMessage);
+      throw err;
+    }
+  }, [fetchDocuments, logout]);
+
+  // ドキュメントの更新
+  const updateDocument = useCallback(async (id: string, document: Partial<Document>) => {
+    try {
+      await documentAPI.updateDocument(id, document, logout);
+      await fetchDocuments(); // 一覧を再取得
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update document';
+      setError(errorMessage);
+      throw err;
+    }
+  }, [fetchDocuments, logout]);
+
+  // ドキュメントの削除
+  const deleteDocument = useCallback(async (id: string) => {
+    try {
+      await documentAPI.deleteDocument(id, logout);
+      if (selectedDocumentId === id) {
+        setSelectedDocumentId(null);
+      }
+      await fetchDocuments(); // 一覧を再取得
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete document';
+      setError(errorMessage);
+      throw err;
+    }
+  }, [fetchDocuments, logout, selectedDocumentId]);
+
   // コンポーネントマウント時にデータを取得
   useEffect(() => {
     fetchDocuments();
-  }, []);
+  }, [fetchDocuments]);
 
   return {
     documents,
@@ -99,7 +146,10 @@ export const useDocuments = () => {
     isLoading,
     error,
     fetchDocuments,
-    selectDocument
+    selectDocument,
+    createDocument,
+    updateDocument,
+    deleteDocument
   };
 };
 

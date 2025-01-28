@@ -27,7 +27,7 @@ export function useAuth() {
       const response = await loginAPI(credentials);
       setUser(response.user);
       setToken(response.token);
-      
+      console.log('Saving token:', response.token);
       // localStorageに保存
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
