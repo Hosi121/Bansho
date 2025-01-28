@@ -1,95 +1,81 @@
-import { useState, useCallback, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
-import { DecodedToken } from '@/types/auth';
-import { loginAPI, registerAPI } from '@/libs/api/auth';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import type { User, LoginCredentials, RegisterCredentials } from '@/types/auth';
+import { User, LoginCredentials, RegisterCredentials } from '@/types/auth';
+import { loginAPI, registerAPI } from '@/libs/api/auth';
 
-export const useAuth = () => {
+export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    try {
-      setLoading(true);
-      const response = await loginAPI(credentials);
-      // クッキーは loginAPI 内で設定されるので、ここでは user 情報だけ保存
-      setUser(response.user);
-      return { success: true };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'ログインに失敗しました'
-      };
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-const logout = useCallback(() => {
-    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    setUser(null);
-    router.push('/login');
-}, [router]);
-
-  const validateToken = useCallback((token: string) => {
-    try {
-      const decoded = jwtDecode(token) as { exp: number };
-      if (decoded.exp * 1000 < Date.now()) {
-        return false;
-      }
-      return true;
-    } catch {
-      return false;
-    }
-  }, []);
-
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token && validateToken(token)) {
-      // トークンが有効な場合、ユーザー情報を設定
-      try {
-        const decoded = jwtDecode(token) as DecodedToken;
-        setUser({
-          id: decoded.id,
-          name: decoded.name,
-          email: decoded.email
-        });
-      } catch {
-        localStorage.removeItem('token');
-      }
-    } else {
-      localStorage.removeItem('token');
+    // localStorage からトークンを復元
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
     }
+    
     setLoading(false);
-  }, [validateToken]);
+  }, []);
 
-  const register = useCallback(async (credentials: RegisterCredentials) => {
+  const login = async (credentials: LoginCredentials) => {
     try {
-      setLoading(true);
-      const response = await registerAPI(credentials);
-      localStorage.setItem('token', response.token);
+      const response = await loginAPI(credentials);
       setUser(response.user);
+      setToken(response.token);
+      
+      // localStorageに保存
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      router.push('/workspace');
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : '登録に失敗しました'
+        error: error instanceof Error ? error.message : '予期せぬエラーが発生しました'
       };
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  };
+
+  const register = async (credentials: RegisterCredentials) => {
+    try {
+      const response = await registerAPI(credentials);
+      setUser(response.user);
+      setToken(response.token);
+      
+      // localStorageに保存
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      router.push('/workspace');
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : '予期せぬエラーが発生しました'
+      };
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/login');
+  };
 
   return {
     user,
+    token,
     loading,
     login,
     register,
-    logout,
-    validateToken
+    logout
   };
-};
-
-export type UseAuthReturn = ReturnType<typeof useAuth>;
+}
