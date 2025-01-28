@@ -1,50 +1,117 @@
 import { Document } from '@/types/document';
+import { authenticatedFetch } from './client';
 
 // ドキュメント一覧を取得
-export const getDocuments = async (): Promise<Document[]> => {
-  try {
-    const response = await fetch('/api/documents', {
+export async function getDocuments(onUnauthorized: () => void): Promise<Document[]> {
+  const response = await authenticatedFetch(
+    'http://localhost:8080/api/v1/documents',
+    {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+        'Accept': 'application/json'
+      }
+    },
+    onUnauthorized
+  );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to fetch documents');
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Failed to fetch documents:', error);
-    return [];
+  if (!response.ok) {
+    console.error('Documents fetch failed:', response.status, response.statusText);
+    throw new Error('Failed to fetch documents');
   }
-};
 
-// 2つのドキュメント間の関連性を計算
-export const calculateRelation = async (doc1: string, doc2: string): Promise<number> => {
-  try {
-    const response = await fetch('/api/relations', {
+  return response.json();
+}
+
+// 特定のドキュメントを取得
+export async function getDocumentById(id: string, onUnauthorized: () => void): Promise<Document> {
+  const response = await authenticatedFetch(
+    `/api/v1/documents${id}`,
+    { method: 'GET' },
+    onUnauthorized
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch document');
+  }
+
+  return response.json();
+}
+
+// 新しいドキュメントを作成
+export async function createDocument(
+  document: Omit<Document, 'id' | 'createdAt' | 'updatedAt'>,
+  onUnauthorized: () => void
+): Promise<Document> {
+  const response = await authenticatedFetch(
+    `/api/v1/documents`,
+    {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        doc1,
-        doc2,
-      }),
-    });
+      body: JSON.stringify(document)
+    },
+    onUnauthorized
+  );
 
-    if (!response.ok) {
-      throw new Error('Failed to calculate relation');
-    }
-
-    const data = await response.json();
-    return data.relation;
-  } catch (error) {
-    console.error('Error calculating relation:', error);
-    return 0; // エラー時はデフォルト値として0を返す
+  if (!response.ok) {
+    throw new Error('Failed to create document');
   }
-};
+
+  return response.json();
+}
+
+// ドキュメントを更新
+export async function updateDocument(
+  id: string,
+  document: Partial<Document>,
+  onUnauthorized: () => void
+): Promise<Document> {
+  const response = await authenticatedFetch(
+    `/api/v1/documents${id}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(document)
+    },
+    onUnauthorized
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to update document');
+  }
+
+  return response.json();
+}
+
+// ドキュメントを削除
+export async function deleteDocument(id: string, onUnauthorized: () => void): Promise<void> {
+  const response = await authenticatedFetch(
+    `/api/v1/documents${id}`,
+    { method: 'DELETE' },
+    onUnauthorized
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to delete document');
+  }
+}
+
+// ドキュメント間の関連性を計算
+export async function calculateRelation(
+  doc1: string,
+  doc2: string,
+  onUnauthorized: () => void
+): Promise<number> {
+  const response = await authenticatedFetch(
+    `/api/v1/relations`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ doc1, doc2 })
+    },
+    onUnauthorized
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to calculate relation');
+  }
+
+  const data = await response.json();
+  return data.relation;
+}
