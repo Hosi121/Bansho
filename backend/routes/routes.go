@@ -7,10 +7,8 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine, db *gorm.DB) {
-	// 例: API v1 のルートグループを作る
 	api := r.Group("/api/v1")
 
-	// ... /api/v1 配下のルートを定義
 	RelationRoutes(api)    // 関連性を見るルート
 	DocumentRoutes(api)    // ドキュメント関連のルート
 	AuthRoutes(api)        // 認証関連のルート (ログイン等)

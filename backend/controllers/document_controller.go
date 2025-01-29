@@ -5,8 +5,8 @@ import (
 
 	"github.com/Hosi121/Bansho/config"
 	"github.com/Hosi121/Bansho/models"
-	"golang.org/x/exp/slog"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/exp/slog"
 )
 
 // GetDocuments - ドキュメント一覧を取得する
@@ -19,6 +19,23 @@ func GetDocuments(c *gin.Context) {
 	}
 
 	slog.Info("fetched documents successfully", slog.Int("count", len(documents)))
+	c.JSON(http.StatusOK, documents)
+}
+
+func GetDocumentsByUserID(c *gin.Context) {
+	userID := c.Param("userId")
+
+	var documents []models.Document
+	// Document構造体内に、例えば UserID フィールドがあると仮定
+	if err := config.DB.Where("user_id = ?", userID).Find(&documents).Error; err != nil {
+		slog.Error("failed to fetch documents by userID",
+			slog.String("error", err.Error()),
+			slog.String("userId", userID))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch documents"})
+		return
+	}
+
+	slog.Info("fetched documents by userID successfully", slog.Int("count", len(documents)))
 	c.JSON(http.StatusOK, documents)
 }
 
@@ -94,4 +111,3 @@ func DeleteDocument(c *gin.Context) {
 	slog.Info("deleted document successfully", slog.String("id", id))
 	c.JSON(http.StatusOK, gin.H{"message": "document deleted successfully"})
 }
-
