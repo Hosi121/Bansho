@@ -17,7 +17,8 @@ export const useDocumentList = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const docs = await documentAPI.getDocuments(logout);
+      const userId = "1"; // 仮のユーザID
+      const docs = await documentAPI.getDocumentsByUserId(userId, logout);
       setDocuments(docs);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch documents';

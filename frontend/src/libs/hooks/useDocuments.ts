@@ -1,7 +1,9 @@
+import { useState, useCallback } from 'react';
 import { useDocumentList } from '@/libs/hooks/useDocumentList';
 import { useDocumentGraph } from '@/libs/hooks/useDocumentGraph';
 
 export const useDocuments = () => {
+  // --- ドキュメント一覧: CRUD
   const {
     documents,
     isLoading: isDocumentLoading,
@@ -12,6 +14,7 @@ export const useDocuments = () => {
     deleteDocument,
   } = useDocumentList();
 
+  // --- グラフ生成・関連度計算
   const {
     graphData,
     isCalculatingRelation,
@@ -19,21 +22,30 @@ export const useDocuments = () => {
     regenerateGraph,
   } = useDocumentGraph(documents);
 
-  // このフックで一緒くたに返す
+  // (1) 選択中ドキュメントIDを管理する
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+
+  // (2) 選択を更新する関数を用意
+  const selectDocument = useCallback((id: string) => {
+    setSelectedDocumentId(id);
+  }, []);
+
+  const isLoading = isDocumentLoading || isCalculatingRelation;
+  const error = documentError || graphError || null;
+
+  // (3) 選択中ID & setter を返却する
   return {
-    // ドキュメント関連
     documents,
-    isDocumentLoading,
-    documentError,
     fetchDocuments,
     createDocument,
     updateDocument,
     deleteDocument,
-
-    // グラフ関連
     graphData,
-    isCalculatingRelation,
-    graphError,
     regenerateGraph,
+    isLoading,
+    error,
+
+    selectedDocumentId, // ここ追加
+    selectDocument,      // ここ追加
   };
 };

@@ -11,10 +11,14 @@ const WorkspacePage = () => {
   const {
     documents,
     graphData,
-    selectedDocumentId,
     isLoading,
     error,
-    selectDocument
+    // もし「選択中のドキュメントID」を管理するなら適宜追加
+    selectedDocumentId,
+    selectDocument,
+    createDocument,
+    updateDocument,
+    deleteDocument,
   } = useDocuments();
 
   if (error) {
@@ -52,19 +56,19 @@ const WorkspacePage = () => {
       <div className="h-[calc(100vh-3rem)] bg-[#1A1B23]">
         <div className="h-full flex">
           <aside className="w-[240px] bg-[#232429] border-r border-white/10">
-            <DocumentList
-              documents={documents}
-              selectedId={selectedDocumentId}
-              onSelect={selectDocument}
-            />
+          <DocumentList
+            documents={documents}
+            selectedId={selectedDocumentId}  // 選択中のドキュメントID
+            onSelect={selectDocument}        // ドキュメント選択時のハンドラー
+          />
           </aside>
           <main className="flex-1 bg-[#1A1B23]">
             <div className="h-full w-full">
-              <KnowledgeGraph
-                data={graphData}
-                onNodeClick={selectDocument}
-                selectedNodeId={selectedDocumentId}
-              />
+            <KnowledgeGraph
+              data={graphData}
+              selectedNodeId={selectedDocumentId} // 例: フックなどから取得した選択中のドキュメントID
+              onNodeClick={selectDocument}       // 例: ノードをクリックしたときの関数
+            />
             </div>
           </main>
         </div>
