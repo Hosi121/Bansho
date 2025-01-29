@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	// Slogのデフォルトロガーを設定
+	// Slog のデフォルトロガーを設定
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
 	// データベース接続
@@ -37,21 +37,18 @@ func main() {
 		slog.Error("failed to initialize database, config.DB is nil")
 		return
 	}
+
+	// Gin のモード設定
 	gin.SetMode(gin.DebugMode)
+
 	// Ginエンジンを作成
 	r := gin.Default()
 
-	// CORSミドルウェアを最初に適用
+	// CORSミドルウェアを適用
 	r.Use(middlewares.CORSMiddleware())
 
-	// APIルートグループを作成
-	api := r.Group("/api/v1")
-	{
-		routes.AuthRoutes(api)
-		routes.DocumentRoutes(api)
-		routes.RelationRoutes(api)
-		routes.ProfileRoutes(db, api)
-	}
+	// ここでルーティング設定を適用
+	routes.SetupRoutes(r, db)
 
 	// ポート番号を取得
 	port := os.Getenv("PORT")
