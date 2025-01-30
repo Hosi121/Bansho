@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, LoginCredentials, RegisterCredentials } from '@/types/auth';
 import { loginAPI, registerAPI } from '@/libs/api/auth';
@@ -62,13 +62,13 @@ export function useAuth() {
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     router.push('/login');
-  };
+  }, [router]);
 
   return {
     user,

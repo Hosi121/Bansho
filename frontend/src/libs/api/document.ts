@@ -37,6 +37,30 @@ export async function getDocumentById(id: string, onUnauthorized: () => void): P
   return response.json();
 }
 
+export async function getDocumentsByUserId(
+  userId: string,
+  onUnauthorized: () => void
+): Promise<Document[]> {
+  // 新ルートを呼ぶ
+  const response = await authenticatedFetch(
+    `http://localhost:8080/api/v1/documents/user/${userId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    },
+    onUnauthorized
+  );
+
+  if (!response.ok) {
+    console.error('Documents (by user) fetch failed:', response.status, response.statusText);
+    throw new Error('Failed to fetch documents by user');
+  }
+
+  return response.json();
+}
+
 // 新しいドキュメントを作成
 export async function createDocument(
   document: Omit<Document, 'id' | 'createdAt' | 'updatedAt'>,
