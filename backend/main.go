@@ -51,11 +51,7 @@ func main() {
 	routes.SetupRoutes(r, db)
 
 	// ポート番号を取得
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-		slog.Warn("PORT environment variable not set, defaulting to 8080")
-	}
+	port := "8080"
 
 	slog.Info("starting server", slog.String("port", port))
 	if err := r.Run(":" + port); err != nil {
