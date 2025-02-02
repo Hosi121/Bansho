@@ -1,10 +1,33 @@
 import React, { useCallback } from "react";
-import { Bold, Italic, List, ListOrdered, Link, Image, Code } from 'lucide-react';
+import { Bold, Italic, List, ListOrdered, Link, Image, Code, Brain } from 'lucide-react';
 
 interface TextEditorProps {
   content: string;
   setContent: (value: string) => void;
 }
+
+const getMarkdownText = (markdownSyntax: string, selectedText: string): string => {
+  switch (markdownSyntax) {
+    case 'bold':
+      return `**${selectedText || 'テキスト'}**`;
+    case 'italic':
+      return `*${selectedText || 'テキスト'}*`;
+    case 'ul':
+      return `\n- ${selectedText || 'リストアイテム'}`;
+    case 'ol':
+      return `\n1. ${selectedText || 'リストアイテム'}`;
+    case 'link':
+      return `[${selectedText || 'リンクテキスト'}](URL)`;
+    case 'image':
+      return `![${selectedText || '画像の説明'}](画像URL)`;
+    case 'code':
+      return selectedText.includes('\n')
+        ? `\n\`\`\`\n${selectedText || 'コード'}\n\`\`\`\n`
+        : `\`${selectedText || 'コード'}\``;
+    default:
+      return '';
+  }
+};
 
 const TextEditor: React.FC<TextEditorProps> = ({ content, setContent }) => {
   const insertMarkdown = useCallback((markdownSyntax: string) => {
@@ -15,39 +38,12 @@ const TextEditor: React.FC<TextEditorProps> = ({ content, setContent }) => {
     const end = textarea.selectionEnd;
     const selectedText = content.substring(start, end);
     
-    let newText = '';
-    switch (markdownSyntax) {
-      case 'bold':
-        newText = `**${selectedText || 'テキスト'}**`;
-        break;
-      case 'italic':
-        newText = `*${selectedText || 'テキスト'}*`;
-        break;
-      case 'ul':
-        newText = `\n- ${selectedText || 'リストアイテム'}`;
-        break;
-      case 'ol':
-        newText = `\n1. ${selectedText || 'リストアイテム'}`;
-        break;
-      case 'link':
-        newText = `[${selectedText || 'リンクテキスト'}](URL)`;
-        break;
-      case 'image':
-        newText = `![${selectedText || '画像の説明'}](画像URL)`;
-        break;
-      case 'code':
-        newText = selectedText.includes('\n') 
-          ? `\n\`\`\`\n${selectedText || 'コード'}\n\`\`\`\n`
-          : `\`${selectedText || 'コード'}\``;
-        break;
-      default:
-        return;
-    }
-
+    const newText = getMarkdownText(markdownSyntax, selectedText);
+    if (!newText) return;
+    
     const newContent = content.substring(0, start) + newText + content.substring(end);
     setContent(newContent);
-
-    // カーソル位置の調整
+    
     setTimeout(() => {
       textarea.focus();
       const newCursorPos = start + newText.length;
@@ -55,10 +51,28 @@ const TextEditor: React.FC<TextEditorProps> = ({ content, setContent }) => {
     }, 0);
   }, [content, setContent]);
 
+  const callAi = useCallback(async () => {
+    try {
+      const response = await fetch('/api/v1/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: content }),
+      });
+      if (!response.ok) {
+        throw new Error('AI リクエストに失敗しました');
+      }
+      const data = await response.json();
+      setContent(content + "\n" + data.answer);
+    } catch (error) {
+      console.error("AI 呼び出しエラー:", error);
+    }
+  }, [content, setContent]);
+
   return (
     <div className="flex flex-col h-full">
-      {/* マークダウンツールバー */}
+      {/* ツールバー */}
       <div className="flex items-center p-2 border-b border-white/10 gap-2 bg-[#2A2B32]">
+        {/* マークダウンボタン群 */}
         <button
           onClick={() => insertMarkdown('bold')}
           className="p-1.5 rounded hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
@@ -107,6 +121,18 @@ const TextEditor: React.FC<TextEditorProps> = ({ content, setContent }) => {
           title="コード"
         >
           <Code size={16} />
+        </button>
+
+        {/* 仕切り（ディバイダー） */}
+        <div className="w-px h-6 bg-white/10 mx-2" />
+
+        {/* AI ボタン */}
+        <button
+          onClick={callAi}
+          className="p-1.5 rounded hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+          title="AI"
+        >
+          <Brain size={16} />
         </button>
       </div>
 
