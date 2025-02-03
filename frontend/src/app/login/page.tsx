@@ -17,7 +17,6 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     const result = await login({ email, password });
     if (result.success) {
       router.push('/workspace');

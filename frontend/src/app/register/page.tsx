@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const { register } = useAuthContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,8 +31,46 @@ export default function RegisterPage() {
 
     if (!result.success) {
       setError(result.error || '登録に失敗しました');
+    } else {
+      setShowConfirmation(true);
     }
   };
+
+  if (showConfirmation) {
+    return (
+      <div className="min-h-screen bg-[#1A1B23] flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-[420px] bg-[#232429] rounded-2xl p-8 shadow-xl backdrop-blur-sm">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-white tracking-tight mb-4">メールをご確認ください</h1>
+            <div className="space-y-4">
+              <p className="text-gray-300">
+                {email} 宛に確認メールを送信しました。
+              </p>
+              <p className="text-gray-300">
+                メール内のリンクをクリックして、登録を完了してください。
+              </p>
+              <div className="mt-6 text-sm text-gray-400">
+                メールが届かない場合：
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>迷惑メールフォルダをご確認ください</li>
+                  <li>メールアドレスが正しいかご確認ください</li>
+                  <li>数分待ってから再度お試しください</li>
+                </ul>
+              </div>
+              <div className="mt-8">
+                <Link
+                  href="/login"
+                  className="text-[#7B8CDE] hover:text-[#8E9DE5] font-medium transition-colors"
+                >
+                  ログインページへ
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#1A1B23] flex flex-col items-center justify-center p-4">

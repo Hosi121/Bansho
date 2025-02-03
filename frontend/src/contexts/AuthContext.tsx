@@ -1,14 +1,14 @@
 'use client';
 
 import { createContext, useContext, ReactNode } from 'react';
-import { User, LoginCredentials, RegisterCredentials } from '@/types/auth';
+import { User, LoginCredentials, RegisterCredentials, AuthResponse } from '@/types/auth';
 import { useAuth } from '@/libs/hooks/useAuth';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
-  register: (credentials: RegisterCredentials) => Promise<{ success: boolean; error?: string }>;
+  login: (credentials: LoginCredentials) => Promise<AuthResponse>;
+  register: (credentials: RegisterCredentials) => Promise<AuthResponse>;
   logout: () => void;
 }
 
@@ -17,10 +17,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const auth = useAuth();
 
-  if (auth.loading) {
+  // ローディング画面は、認証の初期化時のみ表示
+  if (auth.loading && !auth.user) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500" />
+      <div className="flex items-center justify-center min-h-screen bg-[#1A1B23]">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#7B8CDE]" />
       </div>
     );
   }
