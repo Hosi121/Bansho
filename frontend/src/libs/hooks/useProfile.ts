@@ -18,7 +18,7 @@ export const useProfile = () => {
     
     setIsLoading(true);
     try {
-      const response = await updateProfile(user.id, formData);
+      const response = await updateProfile(user.id.toString(), formData);
       if (response.token) {
         await login({
           email: formData.email,
@@ -40,7 +40,7 @@ export const useProfile = () => {
     
     setIsLoading(true);
     try {
-      const response = await updateAvatar(user.id, file);
+      const response = await updateAvatar(user.id.toString(), file);
       if (response.token) {
         await login({
           email: user?.email || '',
