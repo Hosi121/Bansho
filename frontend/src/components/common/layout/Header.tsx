@@ -1,6 +1,6 @@
 'use client';
 
-import { LogOut, Search, Settings, User } from 'lucide-react';
+import { LogOut, Search, Settings, Trash2, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -109,6 +109,10 @@ const Header = forwardRef<HeaderRef>((_, ref) => {
             <DropdownMenuItem onClick={() => router.push('/settings')}>
               <Settings className="mr-2 size-4" />
               設定
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/trash')}>
+              <Trash2 className="mr-2 size-4" />
+              ゴミ箱
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
