@@ -15,12 +15,6 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/libs/hooks/useDebounce';
 
-type UpdateableDocumentField = {
-  title: string;
-  tags: string[];
-  content: string;
-};
-
 type ViewMode = 'split' | 'edit' | 'preview';
 
 const EditorPage: React.FC = () => {
@@ -58,16 +52,18 @@ const EditorPage: React.FC = () => {
     }
   }, [isMobile]);
 
-  const updateDocumentField = <K extends keyof UpdateableDocumentField>(
-    field: K,
-    value: UpdateableDocumentField[K]
-  ) => {
-    setDocument((prev) => ({
-      ...prev,
-      [field]: value,
-      updatedAt: new Date(),
-    }));
-  };
+  // Separate setters for each field to avoid closure issues and improve performance
+  const setTitle = useCallback((value: string) => {
+    setDocument((prev) => ({ ...prev, title: value }));
+  }, []);
+
+  const setTags = useCallback((value: string[]) => {
+    setDocument((prev) => ({ ...prev, tags: value }));
+  }, []);
+
+  const setContent = useCallback((value: string) => {
+    setDocument((prev) => ({ ...prev, content: value }));
+  }, []);
 
   const handleSave = useCallback(async () => {
     if (!document.title.trim()) {
@@ -128,7 +124,7 @@ const EditorPage: React.FC = () => {
                 type="text"
                 placeholder="タイトルを入力"
                 value={document.title}
-                onChange={(e) => updateDocumentField("title", e.target.value)}
+                onChange={(e) => setTitle(e.target.value)}
                 className="flex-1"
               />
 
@@ -194,9 +190,9 @@ const EditorPage: React.FC = () => {
             )}>
               <Toolbar
                 title={document.title}
-                setTitle={(value) => updateDocumentField("title", value)}
+                setTitle={setTitle}
                 tags={document.tags}
-                setTags={(value) => updateDocumentField("tags", value)}
+                setTags={setTags}
                 onSave={handleSave}
                 isSaving={isSaving}
               />
@@ -210,7 +206,7 @@ const EditorPage: React.FC = () => {
             <div className={cn(viewMode === 'split' ? 'w-1/2' : 'w-full')}>
               <TextEditor
                 content={document.content}
-                setContent={(value) => updateDocumentField("content", value)}
+                setContent={setContent}
                 isMobile={isMobile}
               />
             </div>
