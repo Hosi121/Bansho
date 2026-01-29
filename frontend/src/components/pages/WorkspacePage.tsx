@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import AppLayout from '@/components/common/layout/AppLayout';
-import KnowledgeGraph from '@/components/workspace/KnowledgeGraph';
-import DocumentList from '@/components/workspace/DocumentList';
-import { useDocuments } from '@/libs/hooks/useDocuments';
-import { Document, DocumentGraphData } from '@/types/document';
 import { Button } from '@/components/ui/button';
+import DocumentList from '@/components/workspace/DocumentList';
+import KnowledgeGraph from '@/components/workspace/KnowledgeGraph';
 import { cn } from '@/lib/utils';
+import { useDocuments } from '@/libs/hooks/useDocuments';
+import type { Document, DocumentGraphData } from '@/types/document';
 
 interface WorkspaceData {
   documents: Document[];
@@ -20,13 +20,8 @@ interface WorkspaceData {
 }
 
 const WorkspacePage = () => {
-  const {
-    documents,
-    graphData,
-    selectedDocumentId,
-    fetchDocuments,
-    selectDocument
-  } = useDocuments() as WorkspaceData;
+  const { documents, graphData, selectedDocumentId, fetchDocuments, selectDocument } =
+    useDocuments() as WorkspaceData;
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -66,7 +61,7 @@ const WorkspacePage = () => {
           size="icon"
           onClick={toggleSidebar}
           className="md:hidden fixed top-16 left-4 z-50 shadow-lg"
-          aria-label={isSidebarOpen ? "メニューを閉じる" : "メニューを開く"}
+          aria-label={isSidebarOpen ? 'メニューを閉じる' : 'メニューを開く'}
         >
           {isSidebarOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </Button>
@@ -75,23 +70,27 @@ const WorkspacePage = () => {
           {/* サイドバー */}
           <aside
             className={cn(
-              "w-60 bg-card border-r fixed md:relative h-full z-40 transition-transform",
-              isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+              'w-60 bg-card border-r fixed md:relative h-full z-40 transition-transform',
+              isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
             )}
           >
             <DocumentList
               documents={documents}
               selectedId={selectedDocumentId}
               onSelect={handleDocumentSelect}
+              onPinToggle={fetchDocuments}
               isMobile={isMobile}
             />
           </aside>
 
           {/* オーバーレイ（モバイルのみ） */}
           {isSidebarOpen && (
-            <div
-              className="fixed inset-0 bg-black/50 z-30 md:hidden"
+            <button
+              type="button"
+              className="fixed inset-0 bg-black/50 z-30 md:hidden cursor-default"
               onClick={() => setIsSidebarOpen(false)}
+              onKeyDown={(e) => e.key === 'Escape' && setIsSidebarOpen(false)}
+              aria-label="サイドバーを閉じる"
             />
           )}
 

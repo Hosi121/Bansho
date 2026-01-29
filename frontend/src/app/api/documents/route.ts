@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { createDocumentSchema } from "@/lib/validations";
+import { type NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { createDocumentSchema } from '@/lib/validations';
 
 // GET /api/documents - Get all documents for the authenticated user
 export async function GET() {
@@ -9,13 +9,10 @@ export async function GET() {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
 
     const documents = await prisma.document.findMany({
       where: {
@@ -39,7 +36,7 @@ export async function GET() {
           },
         },
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }],
     });
 
     // Transform to match frontend expected format
@@ -49,6 +46,7 @@ export async function GET() {
       content: doc.content,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
+      isPinned: doc.isPinned,
       tags: doc.tags.map((tag) => tag.name),
       edges_from: doc.edgesFrom.map((edge) => ({
         id: edge.id,
@@ -66,11 +64,8 @@ export async function GET() {
 
     return NextResponse.json(transformedDocuments);
   } catch (error) {
-    console.error("Error fetching documents:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching documents:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -80,20 +75,17 @@ export async function POST(request: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
     const body = await request.json();
 
     // Validate input
     const result = createDocumentSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: result.error.flatten() },
+        { error: 'Validation failed', details: result.error.flatten() },
         { status: 400 }
       );
     }
@@ -104,7 +96,7 @@ export async function POST(request: NextRequest) {
     const document = await prisma.document.create({
       data: {
         title,
-        content: content || "",
+        content: content || '',
         userId,
         tags: tags?.length
           ? {
@@ -136,10 +128,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(transformedDocument, { status: 201 });
   } catch (error) {
-    console.error("Error creating document:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error creating document:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,31 +1,52 @@
 'use client';
 
-import React from 'react';
-import { File, Plus } from 'lucide-react';
-import { Document } from '@/types/document';
+import { File, Pin, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { FolderTree } from '@/components/workspace/FolderTree';
+import { cn } from '@/lib/utils';
 import { useFolders } from '@/libs/hooks/useFolders';
+import type { Document } from '@/types/document';
 
 interface DocumentListProps {
   documents: Document[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onPinToggle?: (id: string) => void;
   isMobile: boolean;
 }
 
-const DocumentList = ({ documents, selectedId, onSelect, isMobile }: DocumentListProps) => {
+const DocumentList = ({
+  documents,
+  selectedId,
+  onSelect,
+  onPinToggle,
+  isMobile,
+}: DocumentListProps) => {
   const router = useRouter();
-  const {
-    folderTree,
-    selectedFolderId,
-    createFolder,
-    updateFolder,
-    deleteFolder,
-    selectFolder,
-  } = useFolders();
+  const [pinningId, setPinningId] = useState<string | null>(null);
+  const { folderTree, selectedFolderId, createFolder, updateFolder, deleteFolder, selectFolder } =
+    useFolders();
+
+  const handlePinToggle = async (e: React.MouseEvent, docId: string) => {
+    e.stopPropagation();
+    if (pinningId) return;
+
+    setPinningId(docId);
+    try {
+      const response = await fetch(`/api/documents/${docId}/pin`, {
+        method: 'POST',
+      });
+      if (response.ok) {
+        onPinToggle?.(docId);
+      }
+    } catch (error) {
+      console.error('Failed to toggle pin:', error);
+    } finally {
+      setPinningId(null);
+    }
+  };
 
   const handleCreateNewDocument = () => {
     router.push('/editor');
@@ -47,11 +68,8 @@ const DocumentList = ({ documents, selectedId, onSelect, isMobile }: DocumentLis
   return (
     <div className="flex flex-col h-full">
       {/* New Document Button */}
-      <div className={cn("p-4", isMobile && "pt-16")}>
-        <Button
-          className="w-full"
-          onClick={handleCreateNewDocument}
-        >
+      <div className={cn('p-4', isMobile && 'pt-16')}>
+        <Button className="w-full" onClick={handleCreateNewDocument}>
           <Plus className="mr-2 size-4" />
           新しい文書を作成
         </Button>
@@ -78,32 +96,54 @@ const DocumentList = ({ documents, selectedId, onSelect, isMobile }: DocumentLis
           </div>
           <div className="space-y-1">
             {filteredDocuments.map((doc) => (
-              <Button
-                key={doc.id}
-                variant={selectedId === doc.id ? "secondary" : "ghost"}
-                onClick={() => onSelect(doc.id)}
-                className={cn(
-                  "w-full justify-start h-auto py-2",
-                  selectedId === doc.id && "bg-primary/20"
-                )}
-              >
-                <File className={cn(
-                  "mr-2 size-4 flex-shrink-0",
-                  selectedId === doc.id ? "text-primary" : "text-muted-foreground"
-                )} />
-                <div className="text-left">
-                  <div className="text-sm font-medium truncate">
-                    {doc.title}
+              <div key={doc.id} className="group relative">
+                <Button
+                  variant={selectedId === doc.id ? 'secondary' : 'ghost'}
+                  onClick={() => onSelect(doc.id)}
+                  className={cn(
+                    'w-full justify-start h-auto py-2 pr-10',
+                    selectedId === doc.id && 'bg-primary/20'
+                  )}
+                >
+                  <File
+                    className={cn(
+                      'mr-2 size-4 flex-shrink-0',
+                      selectedId === doc.id ? 'text-primary' : 'text-muted-foreground'
+                    )}
+                  />
+                  <div className="text-left min-w-0 flex-1">
+                    <div className="text-sm font-medium truncate flex items-center gap-1">
+                      {doc.isPinned && <Pin className="size-3 text-primary flex-shrink-0" />}
+                      <span className="truncate">{doc.title}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(doc.updatedAt).toLocaleDateString('ja-JP', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {new Date(doc.updatedAt).toLocaleDateString('ja-JP', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </div>
-                </div>
-              </Button>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    'absolute right-1 top-1/2 -translate-y-1/2 size-7 opacity-0 group-hover:opacity-100 transition-opacity',
+                    doc.isPinned && 'opacity-100'
+                  )}
+                  onClick={(e) => handlePinToggle(e, doc.id)}
+                  disabled={pinningId === doc.id}
+                  title={doc.isPinned ? 'ピン留めを解除' : 'ピン留め'}
+                >
+                  <Pin
+                    className={cn(
+                      'size-4',
+                      doc.isPinned ? 'text-primary fill-primary' : 'text-muted-foreground'
+                    )}
+                  />
+                </Button>
+              </div>
             ))}
           </div>
         </div>
