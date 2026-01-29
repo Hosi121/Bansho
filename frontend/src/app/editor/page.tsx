@@ -1,11 +1,12 @@
 'use client';
 
 import { ChevronDown, Edit2, Eye, PanelRightOpen, Save } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import AppLayout from '@/components/common/layout/AppLayout';
+import BacklinksPanel from '@/components/editor/BacklinksPanel';
 import TextEditor from '@/components/editor/TextEditor';
 import Toolbar from '@/components/editor/Toolbar';
 import Viewer from '@/components/editor/Viewer';
@@ -14,12 +15,15 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import * as documentAPI from '@/libs/api/document';
 import { useDebounce } from '@/libs/hooks/useDebounce';
-import type { Document } from '@/types/document';
+import type { Backlink, Document } from '@/types/document';
 
 type ViewMode = 'split' | 'edit' | 'preview';
 
-const EditorPage: React.FC = () => {
+function EditorPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const documentId = searchParams.get('id');
+
   const [isMobile, setIsMobile] = useState(false);
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
 
@@ -32,12 +36,59 @@ const EditorPage: React.FC = () => {
     createdAt: new Date(),
     updatedAt: new Date(),
   });
+  const [backlinks, setBacklinks] = useState<Backlink[]>([]);
+  const [allDocuments, setAllDocuments] = useState<{ id: string; title: string }[]>([]);
 
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Debounce content for preview rendering (300ms delay)
   const debouncedContent = useDebounce(document.content, 300);
+
+  // Create titleToId map for wiki link transformation
+  const titleToId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const doc of allDocuments) {
+      map.set(doc.title, doc.id);
+    }
+    return map;
+  }, [allDocuments]);
+
+  // Load document by ID from URL params
+  useEffect(() => {
+    const loadDocument = async () => {
+      if (!documentId) return;
+
+      setIsLoading(true);
+      try {
+        const doc = await documentAPI.getDocumentById(documentId);
+        setDocument(doc);
+        setBacklinks(doc.backlinks || []);
+      } catch (error) {
+        console.error('Failed to load document:', error);
+        toast.error('ドキュメントの読み込みに失敗しました');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDocument();
+  }, [documentId]);
+
+  // Load all documents for wiki link resolution
+  useEffect(() => {
+    const loadAllDocuments = async () => {
+      try {
+        const docs = await documentAPI.getDocuments();
+        setAllDocuments(docs.map((d) => ({ id: d.id, title: d.title })));
+      } catch (error) {
+        console.error('Failed to load documents for wiki links:', error);
+      }
+    };
+
+    loadAllDocuments();
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -86,9 +137,12 @@ const EditorPage: React.FC = () => {
         savedDoc = await documentAPI.updateDocument(document.id, documentData);
       } else {
         savedDoc = await documentAPI.createDocument(documentData);
+        // Update URL with new document ID
+        router.replace(`/editor?id=${savedDoc.id}`);
       }
 
       setDocument(savedDoc);
+      setBacklinks(savedDoc.backlinks || []);
       toast.success('保存しました');
       router.refresh();
     } catch (error) {
@@ -200,20 +254,40 @@ const EditorPage: React.FC = () => {
         </div>
 
         {/* エディタ/プレビュー部分 */}
-        <div className="flex-1 flex">
+        <div className="flex-1 flex overflow-hidden">
           {(viewMode === 'edit' || viewMode === 'split') && (
-            <div className={cn(viewMode === 'split' ? 'w-1/2' : 'w-full')}>
-              <TextEditor content={document.content} setContent={setContent} isMobile={isMobile} />
+            <div className={cn('flex flex-col', viewMode === 'split' ? 'w-1/2' : 'w-full')}>
+              <div className="flex-1 overflow-hidden">
+                <TextEditor
+                  content={document.content}
+                  setContent={setContent}
+                  isMobile={isMobile}
+                  documentId={document.id || undefined}
+                />
+              </div>
             </div>
           )}
           {(viewMode === 'preview' || viewMode === 'split') && (
-            <div className={cn(viewMode === 'split' ? 'w-1/2' : 'w-full')}>
-              <Viewer content={debouncedContent} />
+            <div className={cn('flex flex-col', viewMode === 'split' ? 'w-1/2' : 'w-full')}>
+              <Viewer content={debouncedContent} titleToId={titleToId} />
             </div>
           )}
         </div>
+
+        {/* バックリンクパネル */}
+        {document.id && <BacklinksPanel backlinks={backlinks} />}
       </div>
     </AppLayout>
+  );
+}
+
+const EditorPage: React.FC = () => {
+  return (
+    <Suspense
+      fallback={<div className="flex items-center justify-center h-screen">読み込み中...</div>}
+    >
+      <EditorPageContent />
+    </Suspense>
   );
 };
 
