@@ -8,6 +8,9 @@ import {
   updateProfileSchema,
   relationsSchema,
   askSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
 } from '@/lib/validations';
 
 describe('registerSchema', () => {
@@ -266,6 +269,102 @@ describe('askSchema', () => {
       question: 'a'.repeat(1001),
     };
     const result = askSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('forgotPasswordSchema', () => {
+  it('should validate correct email', () => {
+    const validData = { email: 'test@example.com' };
+    const result = forgotPasswordSchema.safeParse(validData);
+    expect(result.success).toBe(true);
+  });
+
+  it('should reject invalid email', () => {
+    const invalidData = { email: 'invalid-email' };
+    const result = forgotPasswordSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject empty email', () => {
+    const invalidData = { email: '' };
+    const result = forgotPasswordSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('resetPasswordSchema', () => {
+  it('should validate correct reset data', () => {
+    const validData = {
+      token: 'valid_token_12345',
+      password: 'newpassword123',
+    };
+    const result = resetPasswordSchema.safeParse(validData);
+    expect(result.success).toBe(true);
+  });
+
+  it('should reject empty token', () => {
+    const invalidData = {
+      token: '',
+      password: 'newpassword123',
+    };
+    const result = resetPasswordSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject short password', () => {
+    const invalidData = {
+      token: 'valid_token',
+      password: 'short',
+    };
+    const result = resetPasswordSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject password that is too long', () => {
+    const invalidData = {
+      token: 'valid_token',
+      password: 'a'.repeat(101),
+    };
+    const result = resetPasswordSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('changePasswordSchema', () => {
+  it('should validate correct change password data', () => {
+    const validData = {
+      currentPassword: 'currentpass123',
+      newPassword: 'newpassword123',
+    };
+    const result = changePasswordSchema.safeParse(validData);
+    expect(result.success).toBe(true);
+  });
+
+  it('should reject empty current password', () => {
+    const invalidData = {
+      currentPassword: '',
+      newPassword: 'newpassword123',
+    };
+    const result = changePasswordSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject short new password', () => {
+    const invalidData = {
+      currentPassword: 'currentpass123',
+      newPassword: 'short',
+    };
+    const result = changePasswordSchema.safeParse(invalidData);
+    expect(result.success).toBe(false);
+  });
+
+  it('should reject new password that is too long', () => {
+    const invalidData = {
+      currentPassword: 'currentpass123',
+      newPassword: 'a'.repeat(101),
+    };
+    const result = changePasswordSchema.safeParse(invalidData);
     expect(result.success).toBe(false);
   });
 });
