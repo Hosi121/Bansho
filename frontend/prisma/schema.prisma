@@ -19,8 +19,12 @@ model User {
   updatedAt    DateTime   @updatedAt @map("updated_at")
   deletedAt    DateTime?  @map("deleted_at")
 
-  documents    Document[]
-  tags         Tag[]
+  documents           Document[]
+  tags                Tag[]
+  passwordResetTokens PasswordResetToken[]
+  folders             Folder[]
+  sharedWithMe        DocumentShare[]   @relation("SharedDocuments")
+  versionsCreated     DocumentVersion[] @relation("VersionCreator")
 
   @@map("users")
 }
@@ -30,18 +34,24 @@ model Document {
   title     String
   content   String
   userId    Int       @map("user_id")
+  folderId  Int?      @map("folder_id")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  tags      Tag[]     @relation("DocumentTags")
-  edgesFrom Edge[]    @relation("FromDocument")
-  edgesTo   Edge[]    @relation("ToDocument")
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  folder    Folder?           @relation(fields: [folderId], references: [id])
+  tags      Tag[]             @relation("DocumentTags")
+  edgesFrom Edge[]            @relation("FromDocument")
+  edgesTo   Edge[]            @relation("ToDocument")
+  shares    DocumentShare[]
+  versions  DocumentVersion[]
+  images    DocumentImage[]
 
   @@index([userId])
   @@index([userId, deletedAt])
   @@index([updatedAt])
+  @@index([folderId])
   @@map("documents")
 }
 
@@ -77,4 +87,87 @@ model Tag {
   @@unique([userId, name])
   @@index([userId])
   @@map("tags")
+}
+
+// パスワードリセットトークン
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  token     String    @unique
+  userId    Int       @map("user_id")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  usedAt    DateTime? @map("used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+// フォルダ
+model Folder {
+  id        Int       @id @default(autoincrement())
+  name      String
+  userId    Int       @map("user_id")
+  parentId  Int?      @map("parent_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Folder?    @relation("FolderHierarchy", fields: [parentId], references: [id])
+  children  Folder[]   @relation("FolderHierarchy")
+  documents Document[]
+
+  @@unique([userId, parentId, name])
+  @@index([userId])
+  @@map("folders")
+}
+
+// ドキュメント共有
+model DocumentShare {
+  id           Int      @id @default(autoincrement())
+  documentId   Int      @map("document_id")
+  sharedWithId Int      @map("shared_with_id")
+  permission   String   @default("view") // "view" | "edit"
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  sharedWith User     @relation("SharedDocuments", fields: [sharedWithId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, sharedWithId])
+  @@map("document_shares")
+}
+
+// バージョン履歴
+model DocumentVersion {
+  id         Int      @id @default(autoincrement())
+  documentId Int      @map("document_id")
+  title      String
+  content    String   @db.Text
+  version    Int
+  createdAt  DateTime @default(now()) @map("created_at")
+  createdBy  Int      @map("created_by")
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user     User     @relation("VersionCreator", fields: [createdBy], references: [id])
+
+  @@unique([documentId, version])
+  @@index([documentId])
+  @@map("document_versions")
+}
+
+// ドキュメント画像
+model DocumentImage {
+  id         Int      @id @default(autoincrement())
+  documentId Int      @map("document_id")
+  url        String
+  filename   String
+  mimeType   String   @map("mime_type")
+  size       Int
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@map("document_images")
 }
