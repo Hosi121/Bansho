@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  name         String?
+  avatar       String?
+  passwordHash String     @map("password_hash")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  deletedAt    DateTime?  @map("deleted_at")
+  documents    Document[]
+
+  @@map("users")
+}
+
+model Document {
+  id        Int       @id @default(autoincrement())
+  title     String
+  content   String
+  userId    Int       @map("user_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  tags      Tag[]     @relation("DocumentTags")
+  edgesFrom Edge[]    @relation("FromDocument")
+  edgesTo   Edge[]    @relation("ToDocument")
+
+  @@map("documents")
+}
+
+model Edge {
+  id             Int       @id @default(autoincrement())
+  fromDocumentId Int       @map("from_document_id")
+  toDocumentId   Int       @map("to_document_id")
+  weight         Float     @default(0)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  fromDocument   Document  @relation("FromDocument", fields: [fromDocumentId], references: [id], onDelete: Cascade)
+  toDocument     Document  @relation("ToDocument", fields: [toDocumentId], references: [id], onDelete: Cascade)
+
+  @@map("edges")
+}
+
+model Tag {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  deletedAt DateTime?  @map("deleted_at")
+  documents Document[] @relation("DocumentTags")
+
+  @@map("tags")
+}
