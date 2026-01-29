@@ -2,12 +2,12 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Document } from '@/types/document';
 import { searchDocuments } from '@/libs/api/search';
-import { MOCK_DOCUMENTS } from './useDocuments';
 
 export const useSearch = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Document[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSearch = useCallback(async (e?: React.FormEvent) => {
@@ -15,18 +15,15 @@ export const useSearch = () => {
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
+    setError(null);
     try {
       const response = await searchDocuments({ query: searchQuery });
       setSearchResults(response.items);
       router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-    } catch (error) {
-      console.error('Search failed:', error);
-      const mockResults = MOCK_DOCUMENTS.filter(doc => 
-        doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-      setSearchResults(mockResults);
+    } catch (err) {
+      console.error('Search failed:', err);
+      setError(err instanceof Error ? err.message : '検索に失敗しました');
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -42,6 +39,7 @@ export const useSearch = () => {
     searchResults,
     setSearchResults,
     isSearching,
+    error,
     handleSearch,
     handleResultClick
   };
