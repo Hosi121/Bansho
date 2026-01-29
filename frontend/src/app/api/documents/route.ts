@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createDocumentSchema } from '@/lib/validations';
+import { getUniqueWikiLinkTitles } from '@/lib/wikilinks';
 
 // GET /api/documents - Get all documents for the authenticated user
 export async function GET() {
@@ -113,6 +114,34 @@ export async function POST(request: NextRequest) {
         edgesTo: true,
       },
     });
+
+    // Create edges from wiki links in content
+    if (content) {
+      const linkedTitles = getUniqueWikiLinkTitles(content);
+      if (linkedTitles.length > 0) {
+        // Find documents by title that belong to the user
+        const linkedDocs = await prisma.document.findMany({
+          where: {
+            userId,
+            deletedAt: null,
+            title: { in: linkedTitles },
+          },
+          select: { id: true },
+        });
+
+        // Create edges for each found document
+        if (linkedDocs.length > 0) {
+          await prisma.edge.createMany({
+            data: linkedDocs.map((linkedDoc) => ({
+              fromDocumentId: document.id,
+              toDocumentId: linkedDoc.id,
+              weight: 1.0,
+            })),
+            skipDuplicates: true,
+          });
+        }
+      }
+    }
 
     // Transform response
     const transformedDocument = {

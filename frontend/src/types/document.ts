@@ -5,6 +5,11 @@ export interface DocumentEdgeData {
   weight: number;
 }
 
+export interface Backlink {
+  id: string;
+  title: string;
+}
+
 export interface Document {
   id: string;
   title: string;
@@ -20,6 +25,7 @@ export interface Document {
   matchEnd?: number;
   edges_from?: DocumentEdgeData[];
   edges_to?: DocumentEdgeData[];
+  backlinks?: Backlink[];
   sharedPermission?: 'view' | 'edit';
 }
 

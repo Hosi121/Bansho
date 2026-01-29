@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { updateDocumentSchema } from '@/lib/validations';
+import { getUniqueWikiLinkTitles } from '@/lib/wikilinks';
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -91,6 +92,21 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
+    // Get backlinks (documents that link to this document via wiki links)
+    const backlinks = await prisma.edge.findMany({
+      where: {
+        toDocumentId: documentId,
+        fromDocument: {
+          deletedAt: null,
+        },
+      },
+      include: {
+        fromDocument: {
+          select: { id: true, title: true },
+        },
+      },
+    });
+
     // Transform response
     const transformedDocument = {
       id: document.id.toString(),
@@ -110,6 +126,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
         from_document_id: edge.fromDocumentId,
         to_document_id: edge.toDocumentId,
         weight: edge.weight,
+      })),
+      backlinks: backlinks.map((edge) => ({
+        id: edge.fromDocument.id.toString(),
+        title: edge.fromDocument.title,
       })),
       ...(sharedPermission && { sharedPermission }),
     };
@@ -232,6 +252,41 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         edgesTo: true,
       },
     });
+
+    // Update wiki link edges if content changed
+    if (content !== undefined) {
+      // Delete existing wiki link edges (edges created from this document)
+      await prisma.edge.deleteMany({
+        where: { fromDocumentId: documentId },
+      });
+
+      // Create new edges from wiki links
+      const linkedTitles = getUniqueWikiLinkTitles(content);
+      if (linkedTitles.length > 0) {
+        // Find documents by title that belong to the document owner
+        const linkedDocs = await prisma.document.findMany({
+          where: {
+            userId: documentOwnerId,
+            deletedAt: null,
+            title: { in: linkedTitles },
+            id: { not: documentId }, // Don't link to self
+          },
+          select: { id: true },
+        });
+
+        // Create edges for each found document
+        if (linkedDocs.length > 0) {
+          await prisma.edge.createMany({
+            data: linkedDocs.map((linkedDoc) => ({
+              fromDocumentId: documentId,
+              toDocumentId: linkedDoc.id,
+              weight: 1.0,
+            })),
+            skipDuplicates: true,
+          });
+        }
+      }
+    }
 
     // Transform response
     const transformedDocument = {
