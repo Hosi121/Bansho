@@ -130,7 +130,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (existingShare) {
       return NextResponse.json(
         { error: 'Document is already shared with this user' },
-        { status: 400 }
+        { status: 409 }
       );
     }
 

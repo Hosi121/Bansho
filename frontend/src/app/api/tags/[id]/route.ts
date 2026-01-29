@@ -110,7 +110,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     });
 
     if (duplicateTag) {
-      return NextResponse.json({ error: 'A tag with this name already exists' }, { status: 400 });
+      return NextResponse.json({ error: 'A tag with this name already exists' }, { status: 409 });
     }
 
     const tag = await prisma.tag.update({

@@ -100,7 +100,7 @@ export async function POST(request: Request) {
     if (existingFolder) {
       return NextResponse.json(
         { error: 'A folder with this name already exists at this location' },
-        { status: 400 }
+        { status: 409 }
       );
     }
 

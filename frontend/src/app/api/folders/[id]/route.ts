@@ -21,7 +21,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params;
-    const folderId = parseInt(id, 10);
+    const folderId = Number.parseInt(id, 10);
     const userId = Number.parseInt(session.user.id, 10);
 
     const folder = await prisma.folder.findFirst({
@@ -79,7 +79,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     const { id } = await params;
-    const folderId = parseInt(id, 10);
+    const folderId = Number.parseInt(id, 10);
     const userId = Number.parseInt(session.user.id, 10);
 
     const body = await request.json();
@@ -152,7 +152,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (duplicateFolder) {
         return NextResponse.json(
           { error: 'A folder with this name already exists at this location' },
-          { status: 400 }
+          { status: 409 }
         );
       }
     }
@@ -187,7 +187,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     const { id } = await params;
-    const folderId = parseInt(id, 10);
+    const folderId = Number.parseInt(id, 10);
     const userId = Number.parseInt(session.user.id, 10);
 
     // Verify folder exists and belongs to user
