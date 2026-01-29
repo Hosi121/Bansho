@@ -36,3 +36,12 @@ export interface Tag {
   name: string;
   color: string;
 }
+
+export interface Folder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  children?: Folder[];
+  createdAt: Date;
+  updatedAt: Date;
+}

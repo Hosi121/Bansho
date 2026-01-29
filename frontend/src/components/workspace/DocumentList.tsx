@@ -1,11 +1,13 @@
 'use client';
 
 import React from 'react';
-import { File, Plus, FolderIcon } from 'lucide-react';
+import { File, Plus } from 'lucide-react';
 import { Document } from '@/types/document';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { FolderTree } from '@/components/workspace/FolderTree';
+import { useFolders } from '@/libs/hooks/useFolders';
 
 interface DocumentListProps {
   documents: Document[];
@@ -16,9 +18,31 @@ interface DocumentListProps {
 
 const DocumentList = ({ documents, selectedId, onSelect, isMobile }: DocumentListProps) => {
   const router = useRouter();
+  const {
+    folderTree,
+    selectedFolderId,
+    createFolder,
+    updateFolder,
+    deleteFolder,
+    selectFolder,
+  } = useFolders();
+
   const handleCreateNewDocument = () => {
     router.push('/editor');
   };
+
+  const handleCreateFolder = async (name: string, parentId: string | null) => {
+    await createFolder({ name, parentId });
+  };
+
+  const handleRenameFolder = async (id: string, name: string) => {
+    await updateFolder(id, { name });
+  };
+
+  // Filter documents by selected folder
+  // For now, show all documents when "全ての文書" is selected
+  // TODO: Add folderId to Document type and filter accordingly
+  const filteredDocuments = documents;
 
   return (
     <div className="flex flex-col h-full">
@@ -37,18 +61,14 @@ const DocumentList = ({ documents, selectedId, onSelect, isMobile }: DocumentLis
       <div className="flex-1 overflow-y-auto">
         {/* Folders Section */}
         <div className="px-3 pt-2">
-          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-2 mb-2">
-            フォルダ
-          </div>
-          <div className="space-y-1">
-            <Button
-              variant="ghost"
-              className="w-full justify-start"
-            >
-              <FolderIcon className="mr-2 size-4" />
-              全ての文書
-            </Button>
-          </div>
+          <FolderTree
+            folders={folderTree}
+            selectedFolderId={selectedFolderId}
+            onSelectFolder={selectFolder}
+            onCreateFolder={handleCreateFolder}
+            onRenameFolder={handleRenameFolder}
+            onDeleteFolder={deleteFolder}
+          />
         </div>
 
         {/* Documents Section */}
@@ -57,7 +77,7 @@ const DocumentList = ({ documents, selectedId, onSelect, isMobile }: DocumentLis
             文書
           </div>
           <div className="space-y-1">
-            {documents.map((doc) => (
+            {filteredDocuments.map((doc) => (
               <Button
                 key={doc.id}
                 variant={selectedId === doc.id ? "secondary" : "ghost"}
