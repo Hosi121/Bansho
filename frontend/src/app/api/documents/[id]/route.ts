@@ -213,6 +213,25 @@ export async function PUT(
 
     const { title, content, tags } = result.data;
 
+    // Create a version before updating (if content changed)
+    if (content !== undefined && content !== existingDocument.content) {
+      const latestVersion = await prisma.documentVersion.findFirst({
+        where: { documentId },
+        orderBy: { version: 'desc' },
+        select: { version: true },
+      });
+
+      await prisma.documentVersion.create({
+        data: {
+          documentId,
+          title: existingDocument.title,
+          content: existingDocument.content,
+          version: (latestVersion?.version || 0) + 1,
+          createdBy: userId,
+        },
+      });
+    }
+
     // Update document
     const document = await prisma.document.update({
       where: { id: documentId },
