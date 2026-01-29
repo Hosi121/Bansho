@@ -33,7 +33,8 @@ export async function GET(
       );
     }
 
-    const document = await prisma.document.findFirst({
+    // First check if user owns the document
+    let document = await prisma.document.findFirst({
       where: {
         id: documentId,
         userId,
@@ -57,6 +58,43 @@ export async function GET(
         },
       },
     });
+
+    // If not owner, check if document is shared with user
+    let sharedPermission: string | null = null;
+    if (!document) {
+      const share = await prisma.documentShare.findFirst({
+        where: {
+          documentId,
+          sharedWithId: userId,
+        },
+        include: {
+          document: {
+            include: {
+              tags: true,
+              edgesFrom: {
+                include: {
+                  toDocument: {
+                    select: { id: true, title: true },
+                  },
+                },
+              },
+              edgesTo: {
+                include: {
+                  fromDocument: {
+                    select: { id: true, title: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (share && !share.document.deletedAt) {
+        document = share.document;
+        sharedPermission = share.permission;
+      }
+    }
 
     if (!document) {
       return NextResponse.json(
@@ -85,6 +123,7 @@ export async function GET(
         to_document_id: edge.toDocumentId,
         weight: edge.weight,
       })),
+      ...(sharedPermission && { sharedPermission }),
     };
 
     return NextResponse.json(transformedDocument);
@@ -135,7 +174,7 @@ export async function PUT(
     }
 
     // Check ownership
-    const existingDocument = await prisma.document.findFirst({
+    let existingDocument = await prisma.document.findFirst({
       where: {
         id: documentId,
         userId,
@@ -143,9 +182,31 @@ export async function PUT(
       },
     });
 
+    let isOwner = !!existingDocument;
+    let documentOwnerId = userId;
+
+    // If not owner, check if user has edit permission
+    if (!existingDocument) {
+      const share = await prisma.documentShare.findFirst({
+        where: {
+          documentId,
+          sharedWithId: userId,
+          permission: 'edit',
+        },
+        include: {
+          document: true,
+        },
+      });
+
+      if (share && !share.document.deletedAt) {
+        existingDocument = share.document;
+        documentOwnerId = share.document.userId;
+      }
+    }
+
     if (!existingDocument) {
       return NextResponse.json(
-        { error: "Document not found" },
+        { error: "Document not found or no edit permission" },
         { status: 404 }
       );
     }
@@ -158,12 +219,13 @@ export async function PUT(
       data: {
         ...(title !== undefined && { title }),
         ...(content !== undefined && { content }),
-        ...(tags !== undefined && {
+        // Only allow tag updates if user is owner
+        ...(tags !== undefined && isOwner && {
           tags: {
             set: [], // Disconnect all existing tags
             connectOrCreate: tags.map((tagName) => ({
-              where: { userId_name: { userId, name: tagName } },
-              create: { name: tagName, userId },
+              where: { userId_name: { userId: documentOwnerId, name: tagName } },
+              create: { name: tagName, userId: documentOwnerId },
             })),
           },
         }),
