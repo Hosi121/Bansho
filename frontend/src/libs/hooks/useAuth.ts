@@ -1,128 +1,98 @@
-// src/libs/hooks/useAuth.ts
-import { useState, useCallback, useEffect } from 'react';
-import { supabase } from '@/libs/supabase';
+'use client';
+
+import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 import type { User, LoginCredentials, RegisterCredentials, AuthResponse } from '@/types/auth';
 
 export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const loading = status === 'loading';
 
-  // ログイン処理
+  const user: User | null = session?.user
+    ? {
+        id: session.user.id,
+        email: session.user.email ?? '',
+        name: session.user.name ?? '',
+        avatar: session.user.image ?? undefined,
+      }
+    : null;
+
   const login = useCallback(async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const result = await signIn('credentials', {
         email: credentials.email,
         password: credentials.password,
-      });
-      if (error || !data.session) {
-        throw new Error(error?.message || 'ログインに失敗しました');
-      }
-      const supabaseUser = data.session.user;
-      const newUser = {
-        id: supabaseUser.id,
-        name: supabaseUser.user_metadata.full_name ?? supabaseUser.email,
-        email: supabaseUser.email ?? '',
-        avatar: supabaseUser.user_metadata.avatar_url,
-      };
-      setUser(newUser);
-      return { success: true, user: newUser };
-    } catch (err) {
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : 'ログインに失敗しました',
-      };
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // ログアウト処理
-  const logout = useCallback(async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    router.push('/login');
-  }, [router]);
-
-  // 登録処理
-  const register = useCallback(async (credentials: RegisterCredentials): Promise<AuthResponse> => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email: credentials.email,
-        password: credentials.password,
-        options: {
-          data: {
-            full_name: credentials.name,
-          },
-        }
+        redirect: false,
       });
 
-      if (error) {
-        throw new Error(error.message || '登録に失敗しました');
-      }
-
-      // メールアドレスが既に登録済みかチェック
-      if (data.user && data.user.identities?.length === 0) {
-        throw new Error('このメールアドレスは既に登録されています');
-      }
-
-      // メール確認が必要な場合
-      if (data.user && !data.session) {
+      if (result?.error) {
         return {
-          success: true,
-          needsEmailVerification: true
+          success: false,
+          error: 'メールアドレスまたはパスワードが正しくありません',
         };
       }
 
-      return {
-        success: true,
-        needsEmailVerification: true
-      };
-    } catch (err) {
+      return { success: true };
+    } catch {
       return {
         success: false,
-        error: err instanceof Error ? err.message : '登録に失敗しました',
+        error: 'ログインに失敗しました',
       };
     }
   }, []);
 
-  // セッション監視
-  useEffect(() => {
-    const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        const supabaseUser = data.session.user;
-        setUser({
-          id: supabaseUser.id,
-          name: supabaseUser.user_metadata.full_name ?? supabaseUser.email ?? '',
-          email: supabaseUser.email ?? '',
-          avatar: supabaseUser.user_metadata.avatar_url,
-        });
-      }
-      setLoading(false);
-    };
-    getSession();
+  const register = useCallback(async (credentials: RegisterCredentials): Promise<AuthResponse> => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: credentials.email,
+          password: credentials.password,
+          name: credentials.name,
+        }),
+      });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        const supabaseUser = session.user;
-        setUser({
-          id: supabaseUser.id,
-          name: supabaseUser.user_metadata.full_name ?? supabaseUser.email,
-          email: supabaseUser.email ?? '',
-          avatar: supabaseUser.user_metadata.avatar_url,
-        });
-      } else {
-        setUser(null);
-      }
-    });
+      const data = await response.json();
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || '登録に失敗しました',
+        };
+      }
+
+      // 登録成功後、自動的にログイン
+      const loginResult = await signIn('credentials', {
+        email: credentials.email,
+        password: credentials.password,
+        redirect: false,
+      });
+
+      if (loginResult?.error) {
+        return {
+          success: true,
+          needsEmailVerification: false,
+        };
+      }
+
+      return { success: true };
+    } catch {
+      return {
+        success: false,
+        error: '登録に失敗しました',
+      };
+    }
   }, []);
+
+  const logout = useCallback(async () => {
+    await signOut({ redirect: false });
+    router.push('/login');
+  }, [router]);
 
   return {
     user,

@@ -3,6 +3,7 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { User, LoginCredentials, RegisterCredentials, AuthResponse } from '@/types/auth';
 import { useAuth } from '@/libs/hooks/useAuth';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AuthContextType {
   user: User | null;
@@ -17,11 +18,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const auth = useAuth();
 
-  // ローディング画面は、認証の初期化時のみ表示
   if (auth.loading && !auth.user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#1A1B23]">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#7B8CDE]" />
+      <div className="flex items-center justify-center min-h-dvh">
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton className="size-12 rounded-full" />
+          <Skeleton className="h-4 w-32" />
+        </div>
       </div>
     );
   }
