@@ -1,50 +1,67 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async rewrites() {
-    return [
+  // Security: Disable x-powered-by header
+  poweredByHeader: false,
+
+  // Enable strict mode for React
+  reactStrictMode: true,
+
+  // Image optimization configuration
+  images: {
+    remotePatterns: [
       {
-        source: '/api/v1/:path*',
-        destination: 'http://localhost:8080/api/v1/:path*',
-        basePath: false,
-      }
-    ]
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
 
+  // Headers configuration
   async headers() {
     return [
       {
-        // Change the source pattern to match your rewrite rule
-        source: '/api/v1/:path*',
+        // Apply to all routes
+        source: '/:path*',
         headers: [
-          { 
-            key: 'Access-Control-Allow-Credentials', 
-            value: 'true' 
-          },
-          { 
-            key: 'Access-Control-Allow-Origin', 
-            value: 'http://localhost:3000' // Replace with your frontend URL
-          },
-          { 
-            key: 'Access-Control-Allow-Methods', 
-            value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT,HEAD' 
-          },
-          { 
-            key: 'Access-Control-Allow-Headers', 
-            value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
           },
           {
-            key: 'Access-Control-Max-Age',
-            value: '86400' // 24 hours
-          }
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains',
+          },
         ],
-      }
-    ]
+      },
+      {
+        // API routes - allow credentials for same-origin requests
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true',
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization',
+          },
+        ],
+      },
+    ];
   },
-  
-  // Add this to ensure proper handling of CORS
-  async redirects() {
-    return [];
+
+  // Environment variables available to the client
+  env: {
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   },
 };
 
