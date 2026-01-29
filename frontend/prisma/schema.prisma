@@ -54,6 +54,7 @@ model Edge {
   fromDocument   Document  @relation("FromDocument", fields: [fromDocumentId], references: [id], onDelete: Cascade)
   toDocument     Document  @relation("ToDocument", fields: [toDocumentId], references: [id], onDelete: Cascade)
 
+  @@unique([fromDocumentId, toDocumentId])
   @@map("edges")
 }
 

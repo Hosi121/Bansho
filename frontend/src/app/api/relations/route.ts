@@ -111,31 +111,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Optionally save the edge to database
-    const existingEdge = await prisma.edge.findFirst({
+    // Save the edge to database using upsert
+    await prisma.edge.upsert({
       where: {
-        OR: [
-          { fromDocumentId: doc1.id, toDocumentId: doc2.id },
-          { fromDocumentId: doc2.id, toDocumentId: doc1.id },
-        ],
-        deletedAt: null,
-      },
-    });
-
-    if (existingEdge) {
-      await prisma.edge.update({
-        where: { id: existingEdge.id },
-        data: { weight: relation },
-      });
-    } else {
-      await prisma.edge.create({
-        data: {
+        fromDocumentId_toDocumentId: {
           fromDocumentId: doc1.id,
           toDocumentId: doc2.id,
-          weight: relation,
         },
-      });
-    }
+      },
+      update: { weight: relation, deletedAt: null },
+      create: {
+        fromDocumentId: doc1.id,
+        toDocumentId: doc2.id,
+        weight: relation,
+      },
+    });
 
     return NextResponse.json({ relation });
   } catch (error) {
