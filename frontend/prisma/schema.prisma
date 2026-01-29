@@ -39,6 +39,9 @@ model Document {
   edgesFrom Edge[]    @relation("FromDocument")
   edgesTo   Edge[]    @relation("ToDocument")
 
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@index([updatedAt])
   @@map("documents")
 }
 
@@ -55,6 +58,8 @@ model Edge {
   toDocument     Document  @relation("ToDocument", fields: [toDocumentId], references: [id], onDelete: Cascade)
 
   @@unique([fromDocumentId, toDocumentId])
+  @@index([fromDocumentId])
+  @@index([toDocumentId])
   @@map("edges")
 }
 
@@ -70,5 +75,6 @@ model Tag {
   documents Document[] @relation("DocumentTags")
 
   @@unique([userId, name])
+  @@index([userId])
   @@map("tags")
 }
