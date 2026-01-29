@@ -1,12 +1,10 @@
 'use client';
 
-import React from 'react';
-import { Search, User, Settings, LogOut } from 'lucide-react';
-import { useAuthContext } from '@/contexts/AuthContext';
-import { useSearch } from '@/libs/hooks/useSearch';
+import { LogOut, Search, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,18 +13,44 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { useDebounce } from '@/libs/hooks/useDebounce';
+import { useSearch } from '@/libs/hooks/useSearch';
 
-const Header = () => {
+export interface HeaderRef {
+  focusSearch: () => void;
+}
+
+const Header = forwardRef<HeaderRef>((_, ref) => {
   const { user, logout } = useAuthContext();
   const router = useRouter();
-  const {
-    searchQuery,
-    setSearchQuery,
-    isSearching,
-    handleSearch
-  } = useSearch();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [localQuery, setLocalQuery] = useState('');
+  const debouncedQuery = useDebounce(localQuery, 300);
+  const { searchQuery, setSearchQuery, isSearching, handleSearch } = useSearch();
+
+  // Expose focus method for keyboard shortcut
+  useImperativeHandle(ref, () => ({
+    focusSearch: () => {
+      searchInputRef.current?.focus();
+    },
+  }));
+
+  // Sync debounced query with search hook
+  useEffect(() => {
+    if (debouncedQuery !== searchQuery) {
+      setSearchQuery(debouncedQuery);
+    }
+  }, [debouncedQuery, searchQuery, setSearchQuery]);
+
+  // Sync local query when searchQuery changes externally (e.g., from URL)
+  useEffect(() => {
+    if (searchQuery !== localQuery && searchQuery !== debouncedQuery) {
+      setLocalQuery(searchQuery);
+    }
+  }, [searchQuery, localQuery, debouncedQuery]);
 
   return (
     <header className="h-12 bg-card border-b">
@@ -42,9 +66,10 @@ const Header = () => {
         <div className="flex-1 max-w-2xl mx-4">
           <form onSubmit={handleSearch} className="relative">
             <Input
+              ref={searchInputRef}
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={localQuery}
+              onChange={(e) => setLocalQuery(e.target.value)}
               placeholder="文書を検索..."
               className="pl-9 h-8"
             />
@@ -55,9 +80,7 @@ const Header = () => {
               className="absolute left-0 top-0 h-8 w-8"
               aria-label="検索"
             >
-              <Search
-                className={cn('size-4', isSearching && 'animate-spin')}
-              />
+              <Search className={cn('size-4', isSearching && 'animate-spin')} />
             </Button>
           </form>
         </div>
@@ -88,10 +111,7 @@ const Header = () => {
               設定
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={logout}
-              className="text-destructive focus:text-destructive"
-            >
+            <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
               <LogOut className="mr-2 size-4" />
               ログアウト
             </DropdownMenuItem>
@@ -100,6 +120,8 @@ const Header = () => {
       </div>
     </header>
   );
-};
+});
+
+Header.displayName = 'Header';
 
 export default Header;
