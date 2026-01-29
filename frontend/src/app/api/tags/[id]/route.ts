@@ -78,7 +78,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const result = updateTagSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
     }
 
     const { name } = result.data;

@@ -82,7 +82,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const result = shareDocumentSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
     }
 
     const { email, permission } = result.data;
@@ -186,7 +189,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const result = updateShareSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
     }
 
     // Verify document ownership

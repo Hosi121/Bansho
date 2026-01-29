@@ -10,7 +10,10 @@ export async function POST(request: Request) {
     const result = forgotPasswordSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.flatten() },
+        { status: 400 }
+      );
     }
 
     const { email } = result.data;
