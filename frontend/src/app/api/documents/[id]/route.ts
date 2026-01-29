@@ -162,8 +162,8 @@ export async function PUT(
           tags: {
             set: [], // Disconnect all existing tags
             connectOrCreate: tags.map((tagName) => ({
-              where: { name: tagName },
-              create: { name: tagName },
+              where: { userId_name: { userId, name: tagName } },
+              create: { name: tagName, userId },
             })),
           },
         }),

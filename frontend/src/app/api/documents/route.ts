@@ -109,8 +109,8 @@ export async function POST(request: NextRequest) {
         tags: tags?.length
           ? {
               connectOrCreate: tags.map((tagName) => ({
-                where: { name: tagName },
-                create: { name: tagName },
+                where: { userId_name: { userId, name: tagName } },
+                create: { name: tagName, userId },
               })),
             }
           : undefined,
