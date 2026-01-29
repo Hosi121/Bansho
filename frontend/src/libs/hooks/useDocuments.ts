@@ -1,5 +1,11 @@
 import { useCallback, useState } from 'react';
-import { createDocument, deleteDocument, getDocuments, updateDocument } from '@/libs/api/document';
+import {
+  createDocument,
+  deleteDocument,
+  getDocuments,
+  importMarkdownFiles,
+  updateDocument,
+} from '@/libs/api/document';
 import type { Document, DocumentGraphData } from '@/types/document';
 
 const createGraphData = (documents: Document[]): DocumentGraphData => {
@@ -210,6 +216,26 @@ export const useDocuments = () => {
     }
   }, [selectedIds, clearSelection, fetchDocuments]);
 
+  const importDocuments = useCallback(
+    async (files: File[]) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await importMarkdownFiles(files);
+        // Refresh documents list after import
+        await fetchDocuments();
+        return result;
+      } catch (err) {
+        console.error('Failed to import documents:', err);
+        setError(err instanceof Error ? err.message : 'Failed to import documents');
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetchDocuments]
+  );
+
   return {
     documents,
     graphData,
@@ -227,6 +253,7 @@ export const useDocuments = () => {
     clearSelection,
     bulkMove,
     bulkDelete,
+    importDocuments,
   };
 };
 

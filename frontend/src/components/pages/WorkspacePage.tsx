@@ -25,6 +25,7 @@ const WorkspacePage = () => {
     clearSelection,
     bulkMove,
     bulkDelete,
+    importDocuments,
   } = useDocuments();
 
   const { folders } = useFolders();
@@ -100,6 +101,7 @@ const WorkspacePage = () => {
               onSelect={handleDocumentSelect}
               onPinToggle={fetchDocuments}
               onToggleSelection={toggleSelection}
+              onImport={importDocuments}
               isMobile={isMobile}
             />
           </aside>

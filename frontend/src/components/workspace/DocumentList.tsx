@@ -1,12 +1,14 @@
 'use client';
 
-import { File, Pin, Plus } from 'lucide-react';
+import { File, Pin, Plus, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import ImportMarkdownDialog from '@/components/dialogs/ImportMarkdownDialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FolderTree } from '@/components/workspace/FolderTree';
 import { cn } from '@/lib/utils';
+import type { ImportResult } from '@/libs/api/document';
 import { useFolders } from '@/libs/hooks/useFolders';
 import type { Document } from '@/types/document';
 
@@ -18,6 +20,7 @@ interface DocumentListProps {
   onSelect: (id: string) => void;
   onPinToggle?: (id: string) => void;
   onToggleSelection?: (id: string) => void;
+  onImport?: (files: File[]) => Promise<ImportResult>;
   isMobile: boolean;
 }
 
@@ -29,10 +32,12 @@ const DocumentList = ({
   onSelect,
   onPinToggle,
   onToggleSelection,
+  onImport,
   isMobile,
 }: DocumentListProps) => {
   const router = useRouter();
   const [pinningId, setPinningId] = useState<string | null>(null);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const { folderTree, selectedFolderId, createFolder, updateFolder, deleteFolder, selectFolder } =
     useFolders();
 
@@ -75,12 +80,27 @@ const DocumentList = ({
   return (
     <div className="flex flex-col h-full">
       {/* New Document Button */}
-      <div className={cn('p-4', isMobile && 'pt-16')}>
+      <div className={cn('p-4 space-y-2', isMobile && 'pt-16')}>
         <Button className="w-full" onClick={handleCreateNewDocument}>
           <Plus className="mr-2 size-4" />
           新しい文書を作成
         </Button>
+        {onImport && (
+          <Button variant="outline" className="w-full" onClick={() => setIsImportDialogOpen(true)}>
+            <Upload className="mr-2 size-4" />
+            インポート
+          </Button>
+        )}
       </div>
+
+      {/* Import Dialog */}
+      {onImport && (
+        <ImportMarkdownDialog
+          open={isImportDialogOpen}
+          onOpenChange={setIsImportDialogOpen}
+          onImport={onImport}
+        />
+      )}
 
       {/* Sections */}
       <div className="flex-1 overflow-y-auto">
