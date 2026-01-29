@@ -1,0 +1,21 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome-check:
+      root: frontend
+      glob: "*.{js,ts,jsx,tsx,json}"
+      run: npx @biomejs/biome check --write --staged --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+    biome-format:
+      root: frontend
+      glob: "*.{js,ts,jsx,tsx,json,css}"
+      run: npx @biomejs/biome format --write --staged --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+  commands:
+    typecheck:
+      root: frontend
+      run: npx tsc --noEmit
