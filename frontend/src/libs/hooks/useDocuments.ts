@@ -1,103 +1,133 @@
 import { useState, useCallback } from 'react';
 import { Document, DocumentGraphData } from '@/types/document';
+import { getDocuments, createDocument, updateDocument, deleteDocument } from '@/libs/api/document';
 
-// モックデータ
-export const MOCK_DOCUMENTS: Document[] = [
-    {
-        id: '1',
-        title: "研究プロジェクトA",
-        content: "研究プロジェクトAの詳細な内容です。AIを活用した新しい手法の開発について...",
-        excerpt: "AIを活用した新しい研究プロジェクト",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        tags: ["研究", "AI", "プロジェクト"]
+const createGraphData = (documents: Document[]): DocumentGraphData => {
+  // ノードの位置をランダムに生成
+  const nodes = documents.map(doc => ({
+    id: doc.id,
+    position: {
+      x: (Math.random() - 0.5) * 6,  // -3 から 3 の範囲
+      y: (Math.random() - 0.5) * 6,
+      z: (Math.random() - 0.5) * 6
     },
-    {
-        id: '2',
-        title: "週次ミーティング議事録",
-        content: "週次ミーティングの詳細な議事録。進捗状況の確認と今後の計画について...",
-        excerpt: "プロジェクトの進捗状況の確認",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        tags: ["ミーティング", "週次"]
-    },
-    {
-        id: '3',
-        title: "技術仕様書",
-        content: "システムの技術仕様書の詳細。アーキテクチャ設計と実装方針について...",
-        excerpt: "新システムの技術仕様の概要",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        tags: ["技術", "仕様"]
-    }
-];
+    title: doc.title,
+    documentInfo: doc
+  }));
 
-const createMockGraphData = (documents: Document[]): DocumentGraphData => {
-    // ノードの位置をランダムに生成
-    const nodes = documents.map(doc => ({
-        id: doc.id,
-        position: {
-            x: (Math.random() - 0.5) * 6,  // -3 から 3 の範囲
-            y: (Math.random() - 0.5) * 6,
-            z: (Math.random() - 0.5) * 6
-        },
-        title: doc.title,
-        documentInfo: doc
-    }));
+  // エッジを生成（edges_from/edges_toから）
+  const edges: DocumentGraphData['edges'] = [];
+  const edgeSet = new Set<string>();
 
-    // 簡単なエッジを生成（すべてのノードを順番につなぐ）
-    const edges = nodes.slice(0, -1).map((node, index) => ({
-        id: `e${index}`,
-        sourceId: node.id,
-        targetId: nodes[index + 1].id,
-        strength: 0.5 + Math.random() * 0.5  // 0.5 から 1.0 の範囲
-    }));
-
-    // 追加のエッジを生成（最初と最後のノードを接続）
-    if (nodes.length > 2) {
+  documents.forEach(doc => {
+    const docEdges = (doc as unknown as { edges_from?: Array<{ id: number; from_document_id: number; to_document_id: number; weight: number }> }).edges_from || [];
+    docEdges.forEach(edge => {
+      const edgeKey = `${edge.from_document_id}-${edge.to_document_id}`;
+      if (!edgeSet.has(edgeKey)) {
+        edgeSet.add(edgeKey);
         edges.push({
-            id: `e${edges.length}`,
-            sourceId: nodes[0].id,
-            targetId: nodes[nodes.length - 1].id,
-            strength: 0.5 + Math.random() * 0.5
+          id: `e${edge.id}`,
+          sourceId: edge.from_document_id.toString(),
+          targetId: edge.to_document_id.toString(),
+          strength: edge.weight
         });
-    }
+      }
+    });
+  });
 
-    return { nodes, edges };
+  return { nodes, edges };
 };
 
 export const useDocuments = () => {
-    const [documents, setDocuments] = useState<Document[]>([]);
-    const [graphData, setGraphData] = useState<DocumentGraphData>({ nodes: [], edges: [] });
-    const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [graphData, setGraphData] = useState<DocumentGraphData>({ nodes: [], edges: [] });
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const fetchDocuments = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            // モックデータを使用
-            await new Promise(resolve => setTimeout(resolve, 500)); // ローディング表示のために遅延を追加
-            setDocuments(MOCK_DOCUMENTS);
-            setGraphData(createMockGraphData(MOCK_DOCUMENTS));
-        } catch (error) {
-            console.error('Failed to fetch documents:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
+  const fetchDocuments = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getDocuments();
+      setDocuments(data);
+      setGraphData(createGraphData(data));
+    } catch (err) {
+      console.error('Failed to fetch documents:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch documents');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-    const selectDocument = useCallback((id: string) => {
-        setSelectedDocumentId(id);
-    }, []);
+  const addDocument = useCallback(async (doc: Omit<Document, 'id' | 'createdAt' | 'updatedAt'>) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const newDoc = await createDocument(doc);
+      setDocuments(prev => [...prev, newDoc]);
+      setGraphData(createGraphData([...documents, newDoc]));
+      return newDoc;
+    } catch (err) {
+      console.error('Failed to create document:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create document');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [documents]);
 
-    return {
-        documents,
-        graphData,
-        selectedDocumentId,
-        isLoading,
-        fetchDocuments,
-        selectDocument
-    };
+  const editDocument = useCallback(async (id: string, updates: Partial<Document>) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const updatedDoc = await updateDocument(id, updates);
+      setDocuments(prev => prev.map(doc => doc.id === id ? updatedDoc : doc));
+      const updatedDocuments = documents.map(doc => doc.id === id ? updatedDoc : doc);
+      setGraphData(createGraphData(updatedDocuments));
+      return updatedDoc;
+    } catch (err) {
+      console.error('Failed to update document:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update document');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [documents]);
+
+  const removeDocument = useCallback(async (id: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await deleteDocument(id);
+      setDocuments(prev => prev.filter(doc => doc.id !== id));
+      const remainingDocuments = documents.filter(doc => doc.id !== id);
+      setGraphData(createGraphData(remainingDocuments));
+    } catch (err) {
+      console.error('Failed to delete document:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete document');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [documents]);
+
+  const selectDocument = useCallback((id: string) => {
+    setSelectedDocumentId(id);
+  }, []);
+
+  return {
+    documents,
+    graphData,
+    selectedDocumentId,
+    isLoading,
+    error,
+    fetchDocuments,
+    addDocument,
+    editDocument,
+    removeDocument,
+    selectDocument
+  };
 };
 
 export type UseDocumentsReturn = ReturnType<typeof useDocuments>;
