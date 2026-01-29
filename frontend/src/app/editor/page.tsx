@@ -1,19 +1,20 @@
-"use client";
+'use client';
 
-import React, { useState, useCallback, useEffect } from "react";
-import { Eye, Edit2, Save, PanelRightOpen, ChevronDown } from "lucide-react";
+import { ChevronDown, Edit2, Eye, PanelRightOpen, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import Toolbar from "@/components/editor/Toolbar";
-import TextEditor from "@/components/editor/TextEditor";
-import Viewer from "@/components/editor/Viewer";
-import { Document } from "@/types/document";
-import AppLayout from "@/components/common/layout/AppLayout";
-import * as documentAPI from '@/libs/api/document';
+import AppLayout from '@/components/common/layout/AppLayout';
+import TextEditor from '@/components/editor/TextEditor';
+import Toolbar from '@/components/editor/Toolbar';
+import Viewer from '@/components/editor/Viewer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import * as documentAPI from '@/libs/api/document';
 import { useDebounce } from '@/libs/hooks/useDebounce';
+import type { Document } from '@/types/document';
 
 type ViewMode = 'split' | 'edit' | 'preview';
 
@@ -23,10 +24,11 @@ const EditorPage: React.FC = () => {
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
 
   const [document, setDocument] = useState<Document>({
-    id: "",
-    title: "",
+    id: '',
+    title: '',
     tags: [],
-    content: "",
+    content: '',
+    isPinned: false,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -98,14 +100,17 @@ const EditorPage: React.FC = () => {
     }
   }, [document, router]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      if (!isSaving) {
-        handleSave();
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (!isSaving) {
+          handleSave();
+        }
       }
-    }
-  }, [isSaving, handleSave]);
+    },
+    [isSaving, handleSave]
+  );
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -161,7 +166,7 @@ const EditorPage: React.FC = () => {
               </div>
 
               <Button onClick={handleSave} disabled={isSaving}>
-                <Save className={cn("mr-2 size-4", isSaving && "animate-spin")} />
+                <Save className={cn('mr-2 size-4', isSaving && 'animate-spin')} />
                 {isSaving ? '保存中...' : '保存'}
               </Button>
             </div>
@@ -177,17 +182,11 @@ const EditorPage: React.FC = () => {
               >
                 タグと書式
                 <ChevronDown
-                  className={cn(
-                    "size-4 transition-transform",
-                    isHeaderExpanded && "rotate-180"
-                  )}
+                  className={cn('size-4 transition-transform', isHeaderExpanded && 'rotate-180')}
                 />
               </Button>
             )}
-            <div className={cn(
-              "px-4 py-2",
-              !isHeaderExpanded && isMobile && "hidden"
-            )}>
+            <div className={cn('px-4 py-2', !isHeaderExpanded && isMobile && 'hidden')}>
               <Toolbar
                 title={document.title}
                 setTitle={setTitle}
@@ -204,11 +203,7 @@ const EditorPage: React.FC = () => {
         <div className="flex-1 flex">
           {(viewMode === 'edit' || viewMode === 'split') && (
             <div className={cn(viewMode === 'split' ? 'w-1/2' : 'w-full')}>
-              <TextEditor
-                content={document.content}
-                setContent={setContent}
-                isMobile={isMobile}
-              />
+              <TextEditor content={document.content} setContent={setContent} isMobile={isMobile} />
             </div>
           )}
           {(viewMode === 'preview' || viewMode === 'split') && (

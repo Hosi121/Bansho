@@ -20,17 +20,7 @@ const createGraphData = (documents: Document[]): DocumentGraphData => {
   const edgeSet = new Set<string>();
 
   documents.forEach((doc) => {
-    const docEdges =
-      (
-        doc as unknown as {
-          edges_from?: Array<{
-            id: number;
-            from_document_id: number;
-            to_document_id: number;
-            weight: number;
-          }>;
-        }
-      ).edges_from || [];
+    const docEdges = doc.edges_from || [];
     docEdges.forEach((edge) => {
       const edgeKey = `${edge.from_document_id}-${edge.to_document_id}`;
       if (!edgeSet.has(edgeKey)) {

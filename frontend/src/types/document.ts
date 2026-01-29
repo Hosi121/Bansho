@@ -1,3 +1,10 @@
+export interface DocumentEdgeData {
+  id: number;
+  from_document_id: number;
+  to_document_id: number;
+  weight: number;
+}
+
 export interface Document {
   id: string;
   title: string;
@@ -5,11 +12,15 @@ export interface Document {
   createdAt: Date;
   updatedAt: Date;
   tags: string[];
-  isPinned?: boolean;
+  isPinned: boolean;
+  folderId?: string | null;
   excerpt?: string;
   matchType?: 'title' | 'content' | 'tag';
   matchStart?: number;
   matchEnd?: number;
+  edges_from?: DocumentEdgeData[];
+  edges_to?: DocumentEdgeData[];
+  sharedPermission?: 'view' | 'edit';
 }
 
 export interface DocumentNode {
@@ -38,7 +49,6 @@ export interface DocumentGraphData {
 export interface Tag {
   id: string;
   name: string;
-  color: string;
 }
 
 export interface Folder {

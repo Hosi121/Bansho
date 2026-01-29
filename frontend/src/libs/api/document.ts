@@ -1,11 +1,11 @@
-import { Document } from '@/types/document';
+import type { Document } from '@/types/document';
 
 // ドキュメント一覧を取得
 export async function getDocuments(): Promise<Document[]> {
   const response = await fetch('/api/documents', {
     method: 'GET',
     headers: {
-      'Accept': 'application/json'
+      Accept: 'application/json',
     },
     credentials: 'include',
   });
@@ -26,7 +26,7 @@ export async function getDocumentById(id: string): Promise<Document> {
   const response = await fetch(`/api/documents/${id}`, {
     method: 'GET',
     headers: {
-      'Accept': 'application/json'
+      Accept: 'application/json',
     },
     credentials: 'include',
   });
@@ -51,16 +51,16 @@ export async function getDocumentsByUserId(): Promise<Document[]> {
 
 // 新しいドキュメントを作成
 export async function createDocument(
-  document: Omit<Document, 'id' | 'createdAt' | 'updatedAt'>
+  document: Omit<Document, 'id' | 'createdAt' | 'updatedAt' | 'isPinned'> & { isPinned?: boolean }
 ): Promise<Document> {
   const response = await fetch('/api/documents', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      Accept: 'application/json',
     },
     credentials: 'include',
-    body: JSON.stringify(document)
+    body: JSON.stringify(document),
   });
 
   if (!response.ok) {
@@ -75,18 +75,15 @@ export async function createDocument(
 }
 
 // ドキュメントを更新
-export async function updateDocument(
-  id: string,
-  document: Partial<Document>
-): Promise<Document> {
+export async function updateDocument(id: string, document: Partial<Document>): Promise<Document> {
   const response = await fetch(`/api/documents/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      Accept: 'application/json',
     },
     credentials: 'include',
-    body: JSON.stringify(document)
+    body: JSON.stringify(document),
   });
 
   if (!response.ok) {
@@ -126,7 +123,7 @@ export async function searchDocuments(query: string): Promise<Document[]> {
   const response = await fetch(`/api/documents/search?q=${encodeURIComponent(query)}`, {
     method: 'GET',
     headers: {
-      'Accept': 'application/json'
+      Accept: 'application/json',
     },
     credentials: 'include',
   });
@@ -142,18 +139,15 @@ export async function searchDocuments(query: string): Promise<Document[]> {
 }
 
 // ドキュメント間の関連性を計算
-export async function calculateRelation(
-  doc1: string,
-  doc2: string
-): Promise<number> {
+export async function calculateRelation(doc1: string, doc2: string): Promise<number> {
   const response = await fetch('/api/relations', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      Accept: 'application/json',
     },
     credentials: 'include',
-    body: JSON.stringify({ documentIds: [parseInt(doc1), parseInt(doc2)] })
+    body: JSON.stringify({ documentIds: [parseInt(doc1), parseInt(doc2)] }),
   });
 
   if (!response.ok) {
