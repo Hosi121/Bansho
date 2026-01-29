@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/documents/[id]/versions/[versionId] - Get a specific version
 export async function GET(
@@ -16,17 +16,14 @@ export async function GET(
     const { id, versionId } = await params;
     const documentId = parseInt(id, 10);
     const versionIdNum = parseInt(versionId, 10);
-    const userId = session.user.id;
+    const userId = parseInt(session.user.id);
 
     // Check if user has access to document
     const document = await prisma.document.findFirst({
       where: {
         id: documentId,
         deletedAt: null,
-        OR: [
-          { userId },
-          { shares: { some: { sharedWithId: userId } } },
-        ],
+        OR: [{ userId }, { shares: { some: { sharedWithId: userId } } }],
       },
     });
 
@@ -83,17 +80,14 @@ export async function POST(
     const { id, versionId } = await params;
     const documentId = parseInt(id, 10);
     const versionIdNum = parseInt(versionId, 10);
-    const userId = session.user.id;
+    const userId = parseInt(session.user.id);
 
     // Check if user owns the document or has edit permission
     const document = await prisma.document.findFirst({
       where: {
         id: documentId,
         deletedAt: null,
-        OR: [
-          { userId },
-          { shares: { some: { sharedWithId: userId, permission: 'edit' } } },
-        ],
+        OR: [{ userId }, { shares: { some: { sharedWithId: userId, permission: 'edit' } } }],
       },
     });
 

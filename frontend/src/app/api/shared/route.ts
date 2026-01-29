@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/shared - Get all documents shared with the current user
 export async function GET() {
@@ -10,9 +10,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const userId = parseInt(session.user.id);
+
     const shares = await prisma.documentShare.findMany({
       where: {
-        sharedWithId: session.user.id,
+        sharedWithId: userId,
         document: {
           deletedAt: null,
         },

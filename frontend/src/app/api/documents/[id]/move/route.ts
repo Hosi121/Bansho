@@ -1,17 +1,14 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
 import { z } from 'zod';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 const moveDocumentSchema = z.object({
   folderId: z.number().int().positive().nullable(),
 });
 
 // PUT /api/documents/[id]/move - Move a document to a folder
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -20,15 +17,13 @@ export async function PUT(
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
+    const userId = parseInt(session.user.id);
 
     const body = await request.json();
     const result = moveDocumentSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     const { folderId } = result.data;
@@ -37,16 +32,13 @@ export async function PUT(
     const document = await prisma.document.findFirst({
       where: {
         id: documentId,
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
     });
 
     if (!document) {
-      return NextResponse.json(
-        { error: 'Document not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
     // Verify folder exists and belongs to user if provided
@@ -54,16 +46,13 @@ export async function PUT(
       const folder = await prisma.folder.findFirst({
         where: {
           id: folderId,
-          userId: session.user.id,
+          userId,
           deletedAt: null,
         },
       });
 
       if (!folder) {
-        return NextResponse.json(
-          { error: 'Folder not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'Folder not found' }, { status: 404 });
       }
     }
 
@@ -80,9 +69,6 @@ export async function PUT(
     });
   } catch (error) {
     console.error('Move document error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

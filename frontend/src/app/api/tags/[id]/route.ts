@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
 import { z } from 'zod';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 const updateTagSchema = z.object({
-  name: z.string().min(1, 'Tag name is required').max(50, 'Tag name must be less than 50 characters'),
+  name: z
+    .string()
+    .min(1, 'Tag name is required')
+    .max(50, 'Tag name must be less than 50 characters'),
 });
 
 // GET /api/tags/[id] - Get a single tag with its documents
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -20,11 +20,12 @@ export async function GET(
 
     const { id } = await params;
     const tagId = parseInt(id, 10);
+    const userId = parseInt(session.user.id);
 
     const tag = await prisma.tag.findFirst({
       where: {
         id: tagId,
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
       include: {
@@ -62,10 +63,7 @@ export async function GET(
 }
 
 // PUT /api/tags/[id] - Update a tag (rename)
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -74,15 +72,13 @@ export async function PUT(
 
     const { id } = await params;
     const tagId = parseInt(id, 10);
+    const userId = parseInt(session.user.id);
 
     const body = await request.json();
     const result = updateTagSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     const { name } = result.data;
@@ -91,7 +87,7 @@ export async function PUT(
     const existingTag = await prisma.tag.findFirst({
       where: {
         id: tagId,
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
     });
@@ -103,7 +99,7 @@ export async function PUT(
     // Check for duplicate name
     const duplicateTag = await prisma.tag.findFirst({
       where: {
-        userId: session.user.id,
+        userId,
         name,
         deletedAt: null,
         id: { not: tagId },
@@ -111,10 +107,7 @@ export async function PUT(
     });
 
     if (duplicateTag) {
-      return NextResponse.json(
-        { error: 'A tag with this name already exists' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'A tag with this name already exists' }, { status: 400 });
     }
 
     const tag = await prisma.tag.update({
@@ -135,10 +128,7 @@ export async function PUT(
 }
 
 // DELETE /api/tags/[id] - Soft delete a tag
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -147,12 +137,13 @@ export async function DELETE(
 
     const { id } = await params;
     const tagId = parseInt(id, 10);
+    const userId = parseInt(session.user.id);
 
     // Check if tag exists and belongs to user
     const tag = await prisma.tag.findFirst({
       where: {
         id: tagId,
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
     });

@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
-import { uploadImage, deleteImage } from '@/lib/storage';
+import { prisma } from '@/lib/prisma';
+import { deleteImage, uploadImage } from '@/lib/storage';
 
 // GET /api/documents/[id]/images - Get all images for a document
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -16,17 +13,14 @@ export async function GET(
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
-    const userId = session.user.id;
+    const userId = parseInt(session.user.id);
 
     // Check if user has access to document
     const document = await prisma.document.findFirst({
       where: {
         id: documentId,
         deletedAt: null,
-        OR: [
-          { userId },
-          { shares: { some: { sharedWithId: userId } } },
-        ],
+        OR: [{ userId }, { shares: { some: { sharedWithId: userId } } }],
       },
     });
 
@@ -56,10 +50,7 @@ export async function GET(
 }
 
 // POST /api/documents/[id]/images - Upload an image
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -68,17 +59,14 @@ export async function POST(
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
-    const userId = session.user.id;
+    const userId = parseInt(session.user.id);
 
     // Check if user owns the document or has edit permission
     const document = await prisma.document.findFirst({
       where: {
         id: documentId,
         deletedAt: null,
-        OR: [
-          { userId },
-          { shares: { some: { sharedWithId: userId, permission: 'edit' } } },
-        ],
+        OR: [{ userId }, { shares: { some: { sharedWithId: userId, permission: 'edit' } } }],
       },
     });
 
@@ -129,10 +117,7 @@ export async function POST(
 }
 
 // DELETE /api/documents/[id]/images?imageId=xxx - Delete an image
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -141,7 +126,7 @@ export async function DELETE(
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
-    const userId = session.user.id;
+    const userId = parseInt(session.user.id);
     const { searchParams } = new URL(request.url);
     const imageId = searchParams.get('imageId');
 
@@ -154,10 +139,7 @@ export async function DELETE(
       where: {
         id: documentId,
         deletedAt: null,
-        OR: [
-          { userId },
-          { shares: { some: { sharedWithId: userId, permission: 'edit' } } },
-        ],
+        OR: [{ userId }, { shares: { some: { sharedWithId: userId, permission: 'edit' } } }],
       },
     });
 

@@ -7,15 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "ignore": [
-      "node_modules",
-      ".next",
-      "dist",
-      "build",
-      "*.config.js",
-      "*.config.mjs",
-      "*.config.ts"
-    ]
+    "includes": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx"]
   },
   "formatter": {
     "enabled": true,

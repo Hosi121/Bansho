@@ -1,8 +1,8 @@
+import crypto from 'crypto';
 import { NextResponse } from 'next/server';
+import { sendPasswordResetEmail } from '@/lib/email';
 import { prisma } from '@/lib/prisma';
 import { forgotPasswordSchema } from '@/lib/validations';
-import { sendPasswordResetEmail } from '@/lib/email';
-import crypto from 'crypto';
 
 export async function POST(request: Request) {
   try {
@@ -10,10 +10,7 @@ export async function POST(request: Request) {
     const result = forgotPasswordSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     const { email } = result.data;
@@ -71,9 +68,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Forgot password error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

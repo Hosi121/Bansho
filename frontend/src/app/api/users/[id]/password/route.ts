@@ -1,13 +1,10 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
-import { changePasswordSchema } from '@/lib/validations';
 import bcrypt from 'bcrypt';
+import { NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { changePasswordSchema } from '@/lib/validations';
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -18,7 +15,7 @@ export async function PUT(
     const userId = parseInt(id, 10);
 
     // Verify user is updating their own password
-    if (session.user.id !== userId) {
+    if (parseInt(session.user.id) !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -26,10 +23,7 @@ export async function PUT(
     const result = changePasswordSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     const { currentPassword, newPassword } = result.data;
@@ -47,10 +41,7 @@ export async function PUT(
     // Verify current password
     const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isValid) {
-      return NextResponse.json(
-        { error: 'Current password is incorrect' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 });
     }
 
     // Hash new password
@@ -67,9 +58,6 @@ export async function PUT(
     });
   } catch (error) {
     console.error('Change password error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

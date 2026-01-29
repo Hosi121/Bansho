@@ -1,12 +1,18 @@
+import ReactPDF, { Document, Font, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import React from 'react';
-import ReactPDF, { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 
 // Register fonts (using system fonts for now)
 Font.register({
   family: 'NotoSansJP',
   fonts: [
-    { src: 'https://fonts.gstatic.com/s/notosansjp/v52/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEj75s.ttf', fontWeight: 400 },
-    { src: 'https://fonts.gstatic.com/s/notosansjp/v52/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFJMj75vN.ttf', fontWeight: 700 },
+    {
+      src: 'https://fonts.gstatic.com/s/notosansjp/v52/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEj75s.ttf',
+      fontWeight: 400,
+    },
+    {
+      src: 'https://fonts.gstatic.com/s/notosansjp/v52/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFJMj75vN.ttf',
+      fontWeight: 700,
+    },
   ],
 });
 
@@ -91,7 +97,11 @@ function parseMarkdownToPDF(content: string): React.ReactElement[] {
     if (listItems.length > 0) {
       listItems.forEach((item, i) => {
         elements.push(
-          React.createElement(Text, { key: `list-${elements.length}-${i}`, style: styles.listItem }, `• ${item}`)
+          React.createElement(
+            Text,
+            { key: `list-${elements.length}-${i}`, style: styles.listItem },
+            `• ${item}`
+          )
         );
       });
       listItems = [];
@@ -101,7 +111,9 @@ function parseMarkdownToPDF(content: string): React.ReactElement[] {
   const flushCodeBlock = () => {
     if (codeBlockContent.length > 0) {
       elements.push(
-        React.createElement(View, { key: `code-${elements.length}`, style: styles.codeBlock },
+        React.createElement(
+          View,
+          { key: `code-${elements.length}`, style: styles.codeBlock },
           React.createElement(Text, {}, codeBlockContent.join('\n'))
         )
       );
@@ -157,7 +169,7 @@ function parseMarkdownToPDF(content: string): React.ReactElement[] {
     }
 
     // List items
-    if (line.match(/^[\-\*]\s/)) {
+    if (line.match(/^[-*]\s/)) {
       listItems.push(line.substring(2));
       return;
     }
@@ -189,16 +201,38 @@ function parseMarkdownToPDF(content: string): React.ReactElement[] {
   return elements;
 }
 
-export function DocumentPDF({ title, content, createdAt, updatedAt }: DocumentPDFProps): React.ReactElement {
+export function DocumentPDF({
+  title,
+  content,
+  createdAt,
+  updatedAt,
+}: DocumentPDFProps): React.ReactElement {
   const contentElements = parseMarkdownToPDF(content);
 
-  return React.createElement(Document, {},
-    React.createElement(Page, { size: 'A4', style: styles.page },
+  return React.createElement(
+    Document,
+    {},
+    React.createElement(
+      Page,
+      { size: 'A4', style: styles.page },
       React.createElement(Text, { style: styles.title }, title),
-      (createdAt || updatedAt) && React.createElement(View, { style: styles.metadata },
-        updatedAt && React.createElement(Text, {}, `最終更新: ${new Date(updatedAt).toLocaleDateString('ja-JP')}`),
-        createdAt && React.createElement(Text, {}, `作成日: ${new Date(createdAt).toLocaleDateString('ja-JP')}`)
-      ),
+      (createdAt || updatedAt) &&
+        React.createElement(
+          View,
+          { style: styles.metadata },
+          updatedAt &&
+            React.createElement(
+              Text,
+              {},
+              `最終更新: ${new Date(updatedAt).toLocaleDateString('ja-JP')}`
+            ),
+          createdAt &&
+            React.createElement(
+              Text,
+              {},
+              `作成日: ${new Date(createdAt).toLocaleDateString('ja-JP')}`
+            )
+        ),
       React.createElement(View, { style: styles.content }, ...contentElements)
     )
   );
@@ -206,11 +240,12 @@ export function DocumentPDF({ title, content, createdAt, updatedAt }: DocumentPD
 
 export async function generatePDF(props: DocumentPDFProps): Promise<Buffer> {
   const doc = DocumentPDF(props);
-  const pdfStream = await ReactPDF.renderToStream(doc);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pdfStream = await ReactPDF.renderToStream(doc as any);
 
-  const chunks: Uint8Array[] = [];
+  const chunks: Buffer[] = [];
   for await (const chunk of pdfStream) {
-    chunks.push(chunk);
+    chunks.push(Buffer.from(chunk));
   }
 
   return Buffer.concat(chunks);

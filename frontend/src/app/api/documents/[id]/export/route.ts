@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { generatePDF } from '@/lib/pdf';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/documents/[id]/export?format=pdf|markdown
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -16,7 +13,7 @@ export async function GET(
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
-    const userId = session.user.id;
+    const userId = parseInt(session.user.id);
 
     const { searchParams } = new URL(request.url);
     const format = searchParams.get('format') || 'markdown';
@@ -59,10 +56,11 @@ export async function GET(
     }
 
     // Sanitize filename
-    const sanitizedTitle = document.title
-      .replace(/[<>:"/\\|?*]/g, '')
-      .replace(/\s+/g, '_')
-      .substring(0, 100) || 'document';
+    const sanitizedTitle =
+      document.title
+        .replace(/[<>:"/\\|?*]/g, '')
+        .replace(/\s+/g, '_')
+        .substring(0, 100) || 'document';
 
     if (format === 'markdown') {
       // Export as Markdown
@@ -99,10 +97,7 @@ export async function GET(
       });
     } catch (pdfError) {
       console.error('PDF generation error:', pdfError);
-      return NextResponse.json(
-        { error: 'Failed to generate PDF' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
     }
   } catch (error) {
     console.error('Export error:', error);

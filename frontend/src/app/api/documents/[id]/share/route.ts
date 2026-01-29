@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
 import { z } from 'zod';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 const shareDocumentSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -13,10 +13,7 @@ const updateShareSchema = z.object({
 });
 
 // GET /api/documents/[id]/share - Get all shares for a document
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -25,12 +22,13 @@ export async function GET(
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
+    const userId = parseInt(session.user.id);
 
     // Verify document ownership
     const document = await prisma.document.findFirst({
       where: {
         id: documentId,
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
     });
@@ -69,10 +67,7 @@ export async function GET(
 }
 
 // POST /api/documents/[id]/share - Share a document with a user
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -81,15 +76,13 @@ export async function POST(
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
+    const userId = parseInt(session.user.id);
 
     const body = await request.json();
     const result = shareDocumentSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     const { email, permission } = result.data;
@@ -98,7 +91,7 @@ export async function POST(
     const document = await prisma.document.findFirst({
       where: {
         id: documentId,
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
     });
@@ -113,18 +106,12 @@ export async function POST(
     });
 
     if (!targetUser) {
-      return NextResponse.json(
-        { error: 'User not found with this email' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found with this email' }, { status: 404 });
     }
 
     // Cannot share with yourself
-    if (targetUser.id === session.user.id) {
-      return NextResponse.json(
-        { error: 'Cannot share document with yourself' },
-        { status: 400 }
-      );
+    if (targetUser.id === userId) {
+      return NextResponse.json({ error: 'Cannot share document with yourself' }, { status: 400 });
     }
 
     // Check if already shared
@@ -178,10 +165,7 @@ export async function POST(
 }
 
 // PUT /api/documents/[id]/share?shareId=xxx - Update share permission
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -190,6 +174,7 @@ export async function PUT(
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
+    const userId = parseInt(session.user.id);
     const { searchParams } = new URL(request.url);
     const shareId = searchParams.get('shareId');
 
@@ -201,17 +186,14 @@ export async function PUT(
     const result = updateShareSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     // Verify document ownership
     const document = await prisma.document.findFirst({
       where: {
         id: documentId,
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
     });
@@ -248,10 +230,7 @@ export async function PUT(
 }
 
 // DELETE /api/documents/[id]/share?shareId=xxx - Remove share
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -260,6 +239,7 @@ export async function DELETE(
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
+    const userId = parseInt(session.user.id);
     const { searchParams } = new URL(request.url);
     const shareId = searchParams.get('shareId');
 
@@ -271,7 +251,7 @@ export async function DELETE(
     const document = await prisma.document.findFirst({
       where: {
         id: documentId,
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
     });

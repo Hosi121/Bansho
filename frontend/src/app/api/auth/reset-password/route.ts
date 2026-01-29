@@ -1,7 +1,7 @@
+import bcrypt from 'bcrypt';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resetPasswordSchema } from '@/lib/validations';
-import bcrypt from 'bcrypt';
 
 export async function POST(request: Request) {
   try {
@@ -9,10 +9,7 @@ export async function POST(request: Request) {
     const result = resetPasswordSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     const { token, password } = result.data;
@@ -24,34 +21,22 @@ export async function POST(request: Request) {
     });
 
     if (!resetToken) {
-      return NextResponse.json(
-        { error: 'Invalid or expired reset token' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid or expired reset token' }, { status: 400 });
     }
 
     // Check if token is expired
     if (resetToken.expiresAt < new Date()) {
-      return NextResponse.json(
-        { error: 'Reset token has expired' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Reset token has expired' }, { status: 400 });
     }
 
     // Check if token is already used
     if (resetToken.usedAt) {
-      return NextResponse.json(
-        { error: 'Reset token has already been used' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Reset token has already been used' }, { status: 400 });
     }
 
     // Check if user still exists
     if (!resetToken.user || resetToken.user.deletedAt) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 400 });
     }
 
     // Hash new password
@@ -74,9 +59,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Reset password error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

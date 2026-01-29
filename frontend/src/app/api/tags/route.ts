@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 // GET /api/tags - Get all tags for the current user with document counts
 export async function GET() {
@@ -10,9 +10,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const userId = parseInt(session.user.id);
+
     const tags = await prisma.tag.findMany({
       where: {
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
       include: {

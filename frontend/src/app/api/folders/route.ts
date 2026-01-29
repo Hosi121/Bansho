@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
 import { z } from 'zod';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 const createFolderSchema = z.object({
-  name: z.string().min(1, 'Folder name is required').max(100, 'Folder name must be less than 100 characters'),
+  name: z
+    .string()
+    .min(1, 'Folder name is required')
+    .max(100, 'Folder name must be less than 100 characters'),
   parentId: z.number().int().positive().nullable().optional(),
 });
 
@@ -16,9 +19,11 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const userId = parseInt(session.user.id);
+
     const folders = await prisma.folder.findMany({
       where: {
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
       orderBy: { name: 'asc' },
@@ -41,10 +46,7 @@ export async function GET() {
     return NextResponse.json(formattedFolders);
   } catch (error) {
     console.error('Get folders error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -56,14 +58,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const userId = parseInt(session.user.id);
+
     const body = await request.json();
     const result = createFolderSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     const { name, parentId } = result.data;
@@ -73,23 +74,20 @@ export async function POST(request: Request) {
       const parentFolder = await prisma.folder.findFirst({
         where: {
           id: parentId,
-          userId: session.user.id,
+          userId,
           deletedAt: null,
         },
       });
 
       if (!parentFolder) {
-        return NextResponse.json(
-          { error: 'Parent folder not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'Parent folder not found' }, { status: 404 });
       }
     }
 
     // Check for duplicate folder name at same level
     const existingFolder = await prisma.folder.findFirst({
       where: {
-        userId: session.user.id,
+        userId,
         parentId: parentId || null,
         name,
         deletedAt: null,
@@ -106,23 +104,23 @@ export async function POST(request: Request) {
     const folder = await prisma.folder.create({
       data: {
         name,
-        userId: session.user.id,
+        userId,
         parentId: parentId || null,
       },
     });
 
-    return NextResponse.json({
-      id: folder.id.toString(),
-      name: folder.name,
-      parentId: folder.parentId?.toString() || null,
-      createdAt: folder.createdAt,
-      updatedAt: folder.updatedAt,
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        id: folder.id.toString(),
+        name: folder.name,
+        parentId: folder.parentId?.toString() || null,
+        createdAt: folder.createdAt,
+        updatedAt: folder.updatedAt,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Create folder error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

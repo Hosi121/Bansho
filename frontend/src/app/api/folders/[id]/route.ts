@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
 import { z } from 'zod';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 const updateFolderSchema = z.object({
-  name: z.string().min(1, 'Folder name is required').max(100, 'Folder name must be less than 100 characters').optional(),
+  name: z
+    .string()
+    .min(1, 'Folder name is required')
+    .max(100, 'Folder name must be less than 100 characters')
+    .optional(),
   parentId: z.number().int().positive().nullable().optional(),
 });
 
 // GET /api/folders/[id] - Get a single folder
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -21,11 +22,12 @@ export async function GET(
 
     const { id } = await params;
     const folderId = parseInt(id, 10);
+    const userId = parseInt(session.user.id);
 
     const folder = await prisma.folder.findFirst({
       where: {
         id: folderId,
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
       include: {
@@ -43,10 +45,7 @@ export async function GET(
     });
 
     if (!folder) {
-      return NextResponse.json(
-        { error: 'Folder not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Folder not found' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -67,18 +66,12 @@ export async function GET(
     });
   } catch (error) {
     console.error('Get folder error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 // PUT /api/folders/[id] - Update a folder
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -87,41 +80,33 @@ export async function PUT(
 
     const { id } = await params;
     const folderId = parseInt(id, 10);
+    const userId = parseInt(session.user.id);
 
     const body = await request.json();
     const result = updateFolderSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error.errors[0].message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
 
     // Verify folder exists and belongs to user
     const existingFolder = await prisma.folder.findFirst({
       where: {
         id: folderId,
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
     });
 
     if (!existingFolder) {
-      return NextResponse.json(
-        { error: 'Folder not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Folder not found' }, { status: 404 });
     }
 
     const { name, parentId } = result.data;
 
     // Prevent moving folder to itself
     if (parentId === folderId) {
-      return NextResponse.json(
-        { error: 'Cannot move folder to itself' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Cannot move folder to itself' }, { status: 400 });
     }
 
     // Verify parent folder belongs to user if provided
@@ -129,16 +114,13 @@ export async function PUT(
       const parentFolder = await prisma.folder.findFirst({
         where: {
           id: parentId,
-          userId: session.user.id,
+          userId,
           deletedAt: null,
         },
       });
 
       if (!parentFolder) {
-        return NextResponse.json(
-          { error: 'Parent folder not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'Parent folder not found' }, { status: 404 });
       }
 
       // Prevent circular reference (moving folder to its descendant)
@@ -156,7 +138,7 @@ export async function PUT(
       const newParentId = parentId !== undefined ? parentId : existingFolder.parentId;
       const duplicateFolder = await prisma.folder.findFirst({
         where: {
-          userId: session.user.id,
+          userId,
           parentId: newParentId,
           name,
           deletedAt: null,
@@ -189,18 +171,12 @@ export async function PUT(
     });
   } catch (error) {
     console.error('Update folder error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 // DELETE /api/folders/[id] - Soft delete a folder
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -209,12 +185,13 @@ export async function DELETE(
 
     const { id } = await params;
     const folderId = parseInt(id, 10);
+    const userId = parseInt(session.user.id);
 
     // Verify folder exists and belongs to user
     const folder = await prisma.folder.findFirst({
       where: {
         id: folderId,
-        userId: session.user.id,
+        userId,
         deletedAt: null,
       },
       include: {
@@ -224,10 +201,7 @@ export async function DELETE(
     });
 
     if (!folder) {
-      return NextResponse.json(
-        { error: 'Folder not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Folder not found' }, { status: 404 });
     }
 
     // Check if folder has children or documents
@@ -247,10 +221,7 @@ export async function DELETE(
     return NextResponse.json({ message: 'Folder deleted successfully' });
   } catch (error) {
     console.error('Delete folder error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
