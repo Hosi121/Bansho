@@ -1,6 +1,7 @@
 'use client';
 
-import { User, Camera } from 'lucide-react';
+import { useState } from 'react';
+import { User, Camera, KeyRound } from 'lucide-react';
 import AppLayout from '@/components/common/layout/AppLayout';
 import { useProfile } from '@/libs/hooks/useProfile';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -9,9 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ChangePasswordDialog } from '@/components/dialogs/ChangePasswordDialog';
 
 export default function ProfilePage() {
   const { user } = useAuthContext();
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const {
     isEditing,
     setIsEditing,
@@ -104,7 +107,11 @@ export default function ProfilePage() {
                     <Label className="text-muted-foreground">メールアドレス</Label>
                     <div className="mt-1">{user?.email}</div>
                   </div>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" onClick={() => setIsPasswordDialogOpen(true)}>
+                      <KeyRound className="mr-2 h-4 w-4" />
+                      パスワードを変更
+                    </Button>
                     <Button variant="link" onClick={() => setIsEditing(true)}>
                       プロフィールを編集
                     </Button>
@@ -113,6 +120,14 @@ export default function ProfilePage() {
               )}
             </CardContent>
           </Card>
+
+          {user && (
+            <ChangePasswordDialog
+              open={isPasswordDialogOpen}
+              onOpenChange={setIsPasswordDialogOpen}
+              userId={user.id}
+            />
+          )}
         </div>
       </div>
     </AppLayout>
