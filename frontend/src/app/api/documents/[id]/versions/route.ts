@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
 
     // Check if user has access to document
     const document = await prisma.document.findFirst({
@@ -67,7 +67,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
 
     // Check if user owns the document or has edit permission
     const document = await prisma.document.findFirst({

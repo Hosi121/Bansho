@@ -15,7 +15,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const userId = parseInt(id, 10);
 
     // Verify user is updating their own password
-    if (parseInt(session.user.id) !== userId) {
+    if (Number.parseInt(session.user.id, 10) !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

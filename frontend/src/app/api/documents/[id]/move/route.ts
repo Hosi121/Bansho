@@ -17,7 +17,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
 
     const body = await request.json();
     const result = moveDocumentSchema.safeParse(body);

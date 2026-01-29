@@ -1,36 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { updateDocumentSchema } from "@/lib/validations";
+import { type NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { updateDocumentSchema } from '@/lib/validations';
 
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
 // GET /api/documents/[id] - Get a specific document
-export async function GET(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await context.params;
-    const documentId = parseInt(id);
-    const userId = parseInt(session.user.id);
+    const documentId = Number.parseInt(id, 10);
+    const userId = Number.parseInt(session.user.id, 10);
 
     if (isNaN(documentId)) {
-      return NextResponse.json(
-        { error: "Invalid document ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid document ID' }, { status: 400 });
     }
 
     // First check if user owns the document
@@ -97,10 +88,7 @@ export async function GET(
     }
 
     if (!document) {
-      return NextResponse.json(
-        { error: "Document not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
     // Transform response
@@ -128,38 +116,26 @@ export async function GET(
 
     return NextResponse.json(transformedDocument);
   } catch (error) {
-    console.error("Error fetching document:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching document:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 // PUT /api/documents/[id] - Update a document
-export async function PUT(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await context.params;
-    const documentId = parseInt(id);
-    const userId = parseInt(session.user.id);
+    const documentId = Number.parseInt(id, 10);
+    const userId = Number.parseInt(session.user.id, 10);
 
     if (isNaN(documentId)) {
-      return NextResponse.json(
-        { error: "Invalid document ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid document ID' }, { status: 400 });
     }
 
     const body = await request.json();
@@ -168,7 +144,7 @@ export async function PUT(
     const result = updateDocumentSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: result.error.flatten() },
+        { error: 'Validation failed', details: result.error.flatten() },
         { status: 400 }
       );
     }
@@ -182,7 +158,7 @@ export async function PUT(
       },
     });
 
-    let isOwner = !!existingDocument;
+    const isOwner = !!existingDocument;
     let documentOwnerId = userId;
 
     // If not owner, check if user has edit permission
@@ -206,7 +182,7 @@ export async function PUT(
 
     if (!existingDocument) {
       return NextResponse.json(
-        { error: "Document not found or no edit permission" },
+        { error: 'Document not found or no edit permission' },
         { status: 404 }
       );
     }
@@ -239,15 +215,16 @@ export async function PUT(
         ...(title !== undefined && { title }),
         ...(content !== undefined && { content }),
         // Only allow tag updates if user is owner
-        ...(tags !== undefined && isOwner && {
-          tags: {
-            set: [], // Disconnect all existing tags
-            connectOrCreate: tags.map((tagName) => ({
-              where: { userId_name: { userId: documentOwnerId, name: tagName } },
-              create: { name: tagName, userId: documentOwnerId },
-            })),
-          },
-        }),
+        ...(tags !== undefined &&
+          isOwner && {
+            tags: {
+              set: [], // Disconnect all existing tags
+              connectOrCreate: tags.map((tagName) => ({
+                where: { userId_name: { userId: documentOwnerId, name: tagName } },
+                create: { name: tagName, userId: documentOwnerId },
+              })),
+            },
+          }),
       },
       include: {
         tags: true,
@@ -280,38 +257,26 @@ export async function PUT(
 
     return NextResponse.json(transformedDocument);
   } catch (error) {
-    console.error("Error updating document:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error updating document:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 // DELETE /api/documents/[id] - Delete a document (soft delete)
-export async function DELETE(
-  request: NextRequest,
-  context: RouteContext
-) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await context.params;
-    const documentId = parseInt(id);
-    const userId = parseInt(session.user.id);
+    const documentId = Number.parseInt(id, 10);
+    const userId = Number.parseInt(session.user.id, 10);
 
     if (isNaN(documentId)) {
-      return NextResponse.json(
-        { error: "Invalid document ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid document ID' }, { status: 400 });
     }
 
     // Check ownership
@@ -324,10 +289,7 @@ export async function DELETE(
     });
 
     if (!existingDocument) {
-      return NextResponse.json(
-        { error: "Document not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
     // Soft delete
@@ -336,12 +298,9 @@ export async function DELETE(
       data: { deletedAt: new Date() },
     });
 
-    return NextResponse.json({ message: "Document deleted successfully" });
+    return NextResponse.json({ message: 'Document deleted successfully' });
   } catch (error) {
-    console.error("Error deleting document:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error deleting document:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

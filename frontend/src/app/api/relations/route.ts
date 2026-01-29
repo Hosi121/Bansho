@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { relationsSchema } from "@/lib/validations";
-import OpenAI from "openai";
+import { type NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { relationsSchema } from '@/lib/validations';
 
 const PROMPT_TEMPLATE = `次の2つのドキュメントの関連性を0から1のスケールで評価してください。
 1: 非常に関連している
@@ -18,20 +18,17 @@ export async function POST(request: NextRequest) {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
     const body = await request.json();
 
     // Validate input
     const result = relationsSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: result.error.flatten() },
+        { error: 'Validation failed', details: result.error.flatten() },
         { status: 400 }
       );
     }
@@ -54,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     if (documents.length !== documentIds.length) {
       return NextResponse.json(
-        { error: "One or more documents not found or not owned by user" },
+        { error: 'One or more documents not found or not owned by user' },
         { status: 404 }
       );
     }
@@ -63,7 +60,7 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       // Return a default relation score if no API key
-      console.warn("OpenAI API key not configured, returning default relation");
+      console.warn('OpenAI API key not configured, returning default relation');
       return NextResponse.json({ relation: 0.5 });
     }
 
@@ -73,16 +70,17 @@ export async function POST(request: NextRequest) {
     // Create prompt
     const doc1 = documents[0];
     const doc2 = documents[1];
-    const prompt = PROMPT_TEMPLATE
-      .replace("%s", `${doc1.title}\n${doc1.content}`)
-      .replace("%s", `${doc2.title}\n${doc2.content}`);
+    const prompt = PROMPT_TEMPLATE.replace('%s', `${doc1.title}\n${doc1.content}`).replace(
+      '%s',
+      `${doc2.title}\n${doc2.content}`
+    );
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: 'gpt-4o-mini',
       messages: [
         {
-          role: "user",
+          role: 'user',
           content: prompt,
         },
       ],
@@ -92,10 +90,7 @@ export async function POST(request: NextRequest) {
 
     const responseContent = completion.choices[0]?.message?.content;
     if (!responseContent) {
-      return NextResponse.json(
-        { error: "No response from AI" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'No response from AI' }, { status: 500 });
     }
 
     // Parse response
@@ -129,11 +124,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ relation });
   } catch (error) {
-    console.error("Error calculating relation:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error calculating relation:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -143,13 +135,10 @@ export async function GET() {
     const session = await auth();
 
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
 
     // Get all user's documents
     const documents = await prisma.document.findMany({
@@ -187,10 +176,7 @@ export async function GET() {
 
     return NextResponse.json(relations);
   } catch (error) {
-    console.error("Error fetching relations:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching relations:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

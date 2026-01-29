@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = Number.parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q');
 

@@ -22,7 +22,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const folderId = parseInt(id, 10);
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
 
     const folder = await prisma.folder.findFirst({
       where: {
@@ -80,7 +80,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const folderId = parseInt(id, 10);
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
 
     const body = await request.json();
     const result = updateFolderSchema.safeParse(body);
@@ -185,7 +185,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     const { id } = await params;
     const folderId = parseInt(id, 10);
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
 
     // Verify folder exists and belongs to user
     const folder = await prisma.folder.findFirst({

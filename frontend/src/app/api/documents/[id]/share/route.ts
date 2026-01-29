@@ -22,7 +22,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
 
     // Verify document ownership
     const document = await prisma.document.findFirst({
@@ -76,7 +76,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
 
     const body = await request.json();
     const result = shareDocumentSchema.safeParse(body);
@@ -174,7 +174,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
     const { searchParams } = new URL(request.url);
     const shareId = searchParams.get('shareId');
 
@@ -239,7 +239,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     const { id } = await params;
     const documentId = parseInt(id, 10);
-    const userId = parseInt(session.user.id);
+    const userId = Number.parseInt(session.user.id, 10);
     const { searchParams } = new URL(request.url);
     const shareId = searchParams.get('shareId');
 

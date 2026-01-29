@@ -147,7 +147,7 @@ export async function calculateRelation(doc1: string, doc2: string): Promise<num
       Accept: 'application/json',
     },
     credentials: 'include',
-    body: JSON.stringify({ documentIds: [parseInt(doc1), parseInt(doc2)] }),
+    body: JSON.stringify({ documentIds: [Number.parseInt(doc1, 10), Number.parseInt(doc2, 10)] }),
   });
 
   if (!response.ok) {
