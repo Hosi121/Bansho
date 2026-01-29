@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useRef } from "react";
 import { Bold, Italic, List, ListOrdered, Link, Image, Code, Brain, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,6 +41,7 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({ onClick, label, icon }) =
 
 const TextEditor: React.FC<TextEditorProps> = ({ content, setContent, isMobile }) => {
   const [isToolbarExpanded, setIsToolbarExpanded] = useState(!isMobile);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const getMarkdownText = (markdownSyntax: string, selectedText: string): string => {
     switch (markdownSyntax) {
@@ -64,7 +65,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ content, setContent, isMobile }
   };
 
   const insertMarkdown = useCallback((markdownSyntax: string) => {
-    const textarea = document.querySelector('textarea');
+    const textarea = textareaRef.current;
     if (!textarea) return;
 
     const start = textarea.selectionStart;
@@ -75,7 +76,8 @@ const TextEditor: React.FC<TextEditorProps> = ({ content, setContent, isMobile }
     const newContent = content.substring(0, start) + newText + content.substring(end);
     setContent(newContent);
 
-    setTimeout(() => {
+    // Use requestAnimationFrame for better timing
+    requestAnimationFrame(() => {
       textarea.focus();
       if (markdownSyntax === 'link') {
         const urlStart = start + newText.indexOf('](') + 2;
@@ -84,7 +86,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ content, setContent, isMobile }
         const newCursorPos = start + newText.length;
         textarea.setSelectionRange(newCursorPos, newCursorPos);
       }
-    }, 0);
+    });
   }, [content, setContent]);
 
   const callAi = useCallback(async () => {
@@ -156,6 +158,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ content, setContent, isMobile }
 
       {/* エディタ */}
       <Textarea
+        ref={textareaRef}
         value={content}
         onChange={(e) => setContent(e.target.value)}
         className="flex-1 resize-none rounded-none border-0 font-mono focus-visible:ring-0"
