@@ -13,6 +13,7 @@ import * as documentAPI from '@/libs/api/document';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { useDebounce } from '@/libs/hooks/useDebounce';
 
 type UpdateableDocumentField = {
   title: string;
@@ -38,6 +39,9 @@ const EditorPage: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Debounce content for preview rendering (300ms delay)
+  const debouncedContent = useDebounce(document.content, 300);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -213,7 +217,7 @@ const EditorPage: React.FC = () => {
           )}
           {(viewMode === 'preview' || viewMode === 'split') && (
             <div className={cn(viewMode === 'split' ? 'w-1/2' : 'w-full')}>
-              <Viewer content={document.content} />
+              <Viewer content={debouncedContent} />
             </div>
           )}
         </div>
