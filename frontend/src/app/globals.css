@@ -67,3 +67,21 @@
     scrollbar-color: hsl(var(--muted)) transparent;
   }
 }
+
+/* KaTeX math styling */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+}
+
+.katex {
+  font-size: 1.1em;
+}
+
+/* Mermaid diagram styling */
+.mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
