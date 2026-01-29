@@ -96,7 +96,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/register', '/', '/forgot-password'];
+  const publicRoutes = ['/login', '/register', '/', '/forgot-password', '/reset-password'];
   if (publicRoutes.some((route) => pathname === route || pathname.startsWith(route + '/'))) {
     const response = NextResponse.next();
     return addSecurityHeaders(response);

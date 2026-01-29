@@ -49,6 +49,28 @@ export const askSchema = z.object({
   documentIds: z.array(z.number().int().positive()).optional(),
 });
 
+// Password reset validations
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token is required"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(100, "Password must be less than 100 characters"),
+});
+
+// Password change validations
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(100, "Password must be less than 100 characters"),
+});
+
 // Type exports
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -58,3 +80,6 @@ export type SearchDocumentInput = z.infer<typeof searchDocumentSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type RelationsInput = z.infer<typeof relationsSchema>;
 export type AskInput = z.infer<typeof askSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
