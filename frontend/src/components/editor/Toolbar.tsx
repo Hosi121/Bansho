@@ -1,6 +1,10 @@
+'use client';
 
 import React, { useState } from "react";
 import { X, Plus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface ToolbarProps {
   title: string;
@@ -18,58 +22,55 @@ const Toolbar: React.FC<ToolbarProps> = ({ tags, setTags }) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.repeat && newTag.trim()) {
-      e.preventDefault();
-      if (!tags.includes(newTag.trim())) {
-        setTags([...tags, newTag.trim()]);
-      }
+  const handleAddTag = () => {
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
+      setTags([...tags, newTag.trim()]);
       setNewTag("");
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.repeat && newTag.trim()) {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       {tags.map((tag) => (
-        <span
-          key={tag}
-          className="inline-flex items-center px-3 py-1 rounded-full
-            bg-[#2A2B32] text-sm text-white border border-white/10"
-        >
+        <Badge key={tag} variant="secondary" className="gap-1">
           {tag}
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => handleRemoveTag(tag)}
-            className="ml-2 text-gray-400 hover:text-white 
-              focus:outline-none transition-colors"
+            aria-label={`${tag}を削除`}
+            className="size-4 p-0 hover:bg-transparent"
           >
-            <X size={14} />
-          </button>
-        </span>
+            <X className="size-3" />
+          </Button>
+        </Badge>
       ))}
       <div className="relative">
-        <input
+        <Input
           type="text"
           placeholder="タグを追加"
           value={newTag}
           onChange={(e) => setNewTag(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="px-3 py-1 bg-[#2A2B32] text-white placeholder-gray-400 
-            border border-white/10 rounded-full text-sm
-            focus:outline-none focus:ring-2 focus:ring-[#7B8CDE]/50"
+          className="h-7 w-32 pr-8 text-sm rounded-full"
         />
         {newTag && (
-          <button
-            onClick={() => {
-              if (newTag.trim() && !tags.includes(newTag.trim())) {
-                setTags([...tags, newTag.trim()]);
-                setNewTag("");
-              }
-            }}
-            className="absolute right-2 top-1/2 -translate-y-1/2
-              text-gray-400 hover:text-white transition-colors"
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleAddTag}
+            aria-label="タグを追加"
+            className="absolute right-1 top-1/2 -translate-y-1/2 size-5"
           >
-            <Plus size={16} />
-          </button>
+            <Plus className="size-3" />
+          </Button>
         )}
       </div>
     </div>

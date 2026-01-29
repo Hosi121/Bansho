@@ -7,6 +7,8 @@ import KnowledgeGraph from '@/components/workspace/KnowledgeGraph';
 import DocumentList from '@/components/workspace/DocumentList';
 import { useDocuments } from '@/libs/hooks/useDocuments';
 import { Document, DocumentGraphData } from '@/types/document';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface WorkspaceData {
   documents: Document[];
@@ -33,10 +35,10 @@ const WorkspacePage = () => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
@@ -57,23 +59,25 @@ const WorkspacePage = () => {
 
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-3rem)] bg-[#1A1B23] relative">
-        {/* モバイルメニューボタン - 左上に固定 */}
-        <button
+      <div className="h-[calc(100dvh-3rem)] relative">
+        {/* モバイルメニューボタン */}
+        <Button
+          variant="secondary"
+          size="icon"
           onClick={toggleSidebar}
-          className="md:hidden fixed top-16 left-4 z-50 p-2 rounded-lg bg-[#232429] text-white 
-            hover:bg-[#2A2B32] transition-colors duration-200 shadow-lg border border-white/10"
-          aria-label="Toggle menu"
+          className="md:hidden fixed top-16 left-4 z-50 shadow-lg"
+          aria-label={isSidebarOpen ? "メニューを閉じる" : "メニューを開く"}
         >
-          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+          {isSidebarOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        </Button>
 
         <div className="h-full flex">
           {/* サイドバー */}
           <aside
-            className={`w-[240px] bg-[#232429] border-r border-white/10 
-              fixed md:relative h-full z-40 transition-transform duration-300 ease-in-out
-              ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+            className={cn(
+              "w-60 bg-card border-r fixed md:relative h-full z-40 transition-transform",
+              isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+            )}
           >
             <DocumentList
               documents={documents}
@@ -92,7 +96,7 @@ const WorkspacePage = () => {
           )}
 
           {/* メインコンテンツ */}
-          <main className="flex-1 bg-[#1A1B23] w-full md:w-[calc(100%-240px)]">
+          <main className="flex-1 w-full md:w-[calc(100%-240px)]">
             <div className="h-full w-full">
               <KnowledgeGraph
                 data={graphData}

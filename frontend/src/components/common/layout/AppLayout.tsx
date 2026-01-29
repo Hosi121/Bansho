@@ -1,22 +1,21 @@
+'use client';
+
 import React, { ReactNode } from 'react';
 import Header from './Header';
 
 interface AppLayoutProps {
-    children: ReactNode;
+  children: ReactNode;
 }
 
 const AppLayout = ({ children }: AppLayoutProps) => {
-    return (
-        <div className="min-h-screen bg-[#13141f]">
-            {/* ヘッダー */}
-            <Header />
-
-            {/* メインコンテンツ */}
-            <main className="flex-1">
-                {children}
-            </main>
-        </div>
-    );
+  return (
+    <div className="min-h-dvh bg-background">
+      <Header />
+      <main className="flex-1">
+        {children}
+      </main>
+    </div>
+  );
 };
 
 export default AppLayout;

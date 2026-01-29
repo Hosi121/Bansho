@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import AppLayout from '@/components/common/layout/AppLayout';
 import SearchResults from '@/components/search/SearchResults';
 import { useSearch } from '@/libs/hooks/useSearch';
+import { Card } from '@/components/ui/card';
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -27,23 +28,23 @@ export default function SearchPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-[calc(100vh-3rem)] bg-[#13141f] text-white p-6">
+      <div className="min-h-[calc(100dvh-3rem)] p-6">
         <div className="max-w-6xl mx-auto">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold mb-2">検索結果</h1>
-            <p className="text-gray-400">
+            <h1 className="text-2xl font-bold mb-2 text-balance">検索結果</h1>
+            <p className="text-muted-foreground text-pretty">
               &quot;{searchQuery}&quot; の検索結果 {searchResults.length}件
             </p>
           </div>
 
-          <div className="bg-[#1a1b23] rounded-xl border border-white/10">
+          <Card>
             <SearchResults
               searchQuery={searchQuery}
               results={searchResults}
               onResultClick={handleResultClick}
               isSearching={isSearching}
             />
-          </div>
+          </Card>
         </div>
       </div>
     </AppLayout>

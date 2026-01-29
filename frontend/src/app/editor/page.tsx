@@ -10,7 +10,9 @@ import Viewer from "@/components/editor/Viewer";
 import { Document } from "@/types/document";
 import AppLayout from "@/components/common/layout/AppLayout";
 import * as documentAPI from '@/libs/api/document';
-import { useAuth } from '@/libs/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 type UpdateableDocumentField = {
   title: string;
@@ -22,7 +24,6 @@ type ViewMode = 'split' | 'edit' | 'preview';
 
 const EditorPage: React.FC = () => {
   const router = useRouter();
-  const { logout } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
 
@@ -64,7 +65,7 @@ const EditorPage: React.FC = () => {
     }));
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!document.title.trim()) {
       toast.error('タイトルを入力してください');
       return;
@@ -80,9 +81,9 @@ const EditorPage: React.FC = () => {
 
       let savedDoc: Document;
       if (document.id) {
-        savedDoc = await documentAPI.updateDocument(document.id, documentData, logout);
+        savedDoc = await documentAPI.updateDocument(document.id, documentData);
       } else {
-        savedDoc = await documentAPI.createDocument(documentData, logout);
+        savedDoc = await documentAPI.createDocument(documentData);
       }
 
       setDocument(savedDoc);
@@ -95,7 +96,7 @@ const EditorPage: React.FC = () => {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [document, router]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -104,7 +105,7 @@ const EditorPage: React.FC = () => {
         handleSave();
       }
     }
-  }, [isSaving]);
+  }, [isSaving, handleSave]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -113,94 +114,80 @@ const EditorPage: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="flex flex-col h-[calc(100vh-3rem)] bg-[#1A1B23] text-white">
+      <div className="flex flex-col h-[calc(100dvh-3rem)]">
         {/* ヘッダー部分 */}
-        <div className="flex flex-col border-b border-white/10">
+        <div className="flex flex-col border-b">
           {/* タイトル入力と保存ボタン */}
-          <div className="p-4 bg-[#232429] flex flex-col md:flex-row gap-4">
+          <div className="p-4 bg-card flex flex-col md:flex-row gap-4">
             <div className="flex-1 flex items-center gap-4">
-              <input
+              <Input
                 type="text"
                 placeholder="タイトルを入力"
                 value={document.title}
                 onChange={(e) => updateDocumentField("title", e.target.value)}
-                className="flex-1 p-2 bg-[#2A2B32] text-white placeholder-gray-400 
-                  border border-white/10 rounded-lg 
-                  focus:outline-none focus:ring-2 focus:ring-[#7B8CDE]/50"
+                className="flex-1"
               />
 
-              <div className="flex rounded bg-[#2A2B32] p-0.5">
-                <button
+              <div className="flex rounded-md bg-secondary p-0.5">
+                <Button
+                  variant={viewMode === 'edit' ? 'default' : 'ghost'}
+                  size="icon"
                   onClick={() => setViewMode('edit')}
-                  className={`p-1.5 rounded ${
-                    viewMode === 'edit' 
-                      ? 'bg-[#7B8CDE] text-white' 
-                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                  } transition-colors`}
-                  title="エディタのみ"
+                  aria-label="エディタのみ"
+                  className="size-8"
                 >
-                  <Edit2 size={18} />
-                </button>
+                  <Edit2 className="size-4" />
+                </Button>
                 {!isMobile && (
-                  <button
+                  <Button
+                    variant={viewMode === 'split' ? 'default' : 'ghost'}
+                    size="icon"
                     onClick={() => setViewMode('split')}
-                    className={`p-1.5 rounded ${
-                      viewMode === 'split'
-                        ? 'bg-[#7B8CDE] text-white'
-                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                    } transition-colors`}
-                    title="分割表示"
+                    aria-label="分割表示"
+                    className="size-8"
                   >
-                    <PanelRightOpen size={18} />
-                  </button>
+                    <PanelRightOpen className="size-4" />
+                  </Button>
                 )}
-                <button
+                <Button
+                  variant={viewMode === 'preview' ? 'default' : 'ghost'}
+                  size="icon"
                   onClick={() => setViewMode('preview')}
-                  className={`p-1.5 rounded ${
-                    viewMode === 'preview'
-                      ? 'bg-[#7B8CDE] text-white'
-                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                  } transition-colors`}
-                  title="プレビューのみ"
+                  aria-label="プレビューのみ"
+                  className="size-8"
                 >
-                  <Eye size={18} />
-                </button>
+                  <Eye className="size-4" />
+                </Button>
               </div>
 
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="px-4 py-2 bg-[#7B8CDE] text-white rounded-lg
-                  hover:bg-[#8E9DE5] active:bg-[#6B7BD0] transition-all duration-200
-                  focus:outline-none focus:ring-2 focus:ring-[#7B8CDE]/50
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  flex items-center whitespace-nowrap"
-              >
-                <Save size={18} className={`mr-2 ${isSaving ? 'animate-spin' : ''}`} />
+              <Button onClick={handleSave} disabled={isSaving}>
+                <Save className={cn("mr-2 size-4", isSaving && "animate-spin")} />
                 {isSaving ? '保存中...' : '保存'}
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* タグと書式設定 */}
-          <div className="bg-[#232429] border-t border-white/10">
+          <div className="bg-card border-t">
             {isMobile && (
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
-                className="w-full p-2 flex items-center justify-between text-gray-400 hover:text-white"
+                className="w-full justify-between"
               >
                 タグと書式
                 <ChevronDown
-                  size={20}
-                  className={`transform transition-transform ${
-                    isHeaderExpanded ? 'rotate-180' : ''
-                  }`}
+                  className={cn(
+                    "size-4 transition-transform",
+                    isHeaderExpanded && "rotate-180"
+                  )}
                 />
-              </button>
+              </Button>
             )}
-            <div className={`${
-              isHeaderExpanded || !isMobile ? 'block' : 'hidden'
-            } px-4 py-2`}>
+            <div className={cn(
+              "px-4 py-2",
+              !isHeaderExpanded && isMobile && "hidden"
+            )}>
               <Toolbar
                 title={document.title}
                 setTitle={(value) => updateDocumentField("title", value)}
@@ -216,7 +203,7 @@ const EditorPage: React.FC = () => {
         {/* エディタ/プレビュー部分 */}
         <div className="flex-1 flex">
           {(viewMode === 'edit' || viewMode === 'split') && (
-            <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'}`}>
+            <div className={cn(viewMode === 'split' ? 'w-1/2' : 'w-full')}>
               <TextEditor
                 content={document.content}
                 setContent={(value) => updateDocumentField("content", value)}
@@ -225,7 +212,7 @@ const EditorPage: React.FC = () => {
             </div>
           )}
           {(viewMode === 'preview' || viewMode === 'split') && (
-            <div className={`${viewMode === 'split' ? 'w-1/2' : 'w-full'}`}>
+            <div className={cn(viewMode === 'split' ? 'w-1/2' : 'w-full')}>
               <Viewer content={document.content} />
             </div>
           )}

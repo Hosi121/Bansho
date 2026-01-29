@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { AuthProvider } from '@/components/providers/AuthProvider';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
@@ -13,10 +14,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja">
+    <html lang="ja" className="dark">
       <body>
         <AuthProvider>
-          {children}
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
         </AuthProvider>
       </body>
     </html>

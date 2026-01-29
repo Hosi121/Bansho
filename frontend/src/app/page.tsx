@@ -7,6 +7,7 @@ import {
   ArrowRight, Network, Brain, Edit, Layers,
   ChevronDown, Box, FileText, Sparkles, LucideIcon, Eye, Github
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
   scrollProgress: MotionValue<number>;
@@ -49,9 +50,9 @@ export default function Home() {
       <SplashScreen />
       <div className="relative bg-[#1A1B23]">
         <Header scrollProgress={scrollYProgress} />
-        <div className="h-screen w-full overflow-y-scroll snap-y snap-mandatory">
+        <div className="h-dvh w-full overflow-y-scroll snap-y snap-mandatory">
           {/* Hero Section */}
-          <section className="snap-start h-screen w-full flex items-center justify-center relative overflow-hidden">
+          <section className="snap-start h-dvh w-full flex items-center justify-center relative overflow-hidden">
             <FloatingElements />
             <div className="absolute inset-0 bg-gradient-radial from-[#1A1B23] via-[#1A1B23] to-[#232429]" />
             <motion.div
@@ -61,7 +62,7 @@ export default function Home() {
               className="text-center z-10 max-w-4xl mx-auto px-4"
             >
               <motion.h1
-                className="text-7xl font-bold text-white mb-8 tracking-tight"
+                className="text-7xl font-bold text-white mb-8 tracking-tight text-balance"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.8 }}
@@ -69,7 +70,7 @@ export default function Home() {
                 知識を、立体的に
               </motion.h1>
               <motion.p
-                className="text-xl text-gray-300 mb-12 leading-relaxed"
+                className="text-xl text-gray-300 mb-12 leading-relaxed text-pretty"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.8 }}
@@ -83,7 +84,7 @@ export default function Home() {
           </section>
 
           {/* Connect Section */}
-          <section className="snap-start h-screen w-full flex items-center justify-center relative overflow-hidden">
+          <section className="snap-start h-dvh w-full flex items-center justify-center relative overflow-hidden">
             <div className="absolute inset-0">
               <motion.div
                 className="absolute inset-0 bg-[#232429]"
@@ -101,7 +102,7 @@ export default function Home() {
               >
                 <div>
                   <motion.h2
-                    className="text-5xl font-bold text-white mb-8"
+                    className="text-5xl font-bold text-white mb-8 text-balance"
                     initial={{ x: -50, opacity: 0 }}
                     whileInView={{ x: 0, opacity: 1 }}
                     viewport={{ once: true }}
@@ -109,7 +110,7 @@ export default function Home() {
                     繋げる・整える・発見する
                   </motion.h2>
                   <motion.p
-                    className="text-xl text-gray-300 mb-8 leading-relaxed"
+                    className="text-xl text-gray-300 mb-8 leading-relaxed text-pretty"
                     initial={{ x: -50, opacity: 0 }}
                     whileInView={{ x: 0, opacity: 1 }}
                     viewport={{ once: true }}
@@ -130,14 +131,14 @@ export default function Home() {
           </section>
 
           {/* Write Section */}
-          <section className="snap-start h-screen w-full flex items-center justify-center relative overflow-hidden">
+          <section className="snap-start h-dvh w-full flex items-center justify-center relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-[#1A1B23] to-[#232429]" />
             <div className="max-w-7xl mx-auto px-4 z-10">
               <div className="grid lg:grid-cols-2 gap-16 items-center">
                 <EditorPreview />
                 <div>
                   <motion.h2
-                    className="text-5xl font-bold text-white mb-8"
+                    className="text-5xl font-bold text-white mb-8 text-balance"
                     initial={{ x: 50, opacity: 0 }}
                     whileInView={{ x: 0, opacity: 1 }}
                     viewport={{ once: true }}
@@ -145,7 +146,7 @@ export default function Home() {
                     楽々、書ける
                   </motion.h2>
                   <motion.p
-                    className="text-xl text-gray-300 mb-8 leading-relaxed"
+                    className="text-xl text-gray-300 mb-8 leading-relaxed text-pretty"
                     initial={{ x: 50, opacity: 0 }}
                     whileInView={{ x: 0, opacity: 1 }}
                     viewport={{ once: true }}
@@ -165,7 +166,7 @@ export default function Home() {
           </section>
 
           {/* Visualize Section */}
-          <section className="snap-start h-screen w-full flex items-center justify-center relative overflow-hidden">
+          <section className="snap-start h-dvh w-full flex items-center justify-center relative overflow-hidden">
             <div className="absolute inset-0">
               <motion.div
                 className="absolute inset-0"
@@ -178,7 +179,7 @@ export default function Home() {
               <div className="grid lg:grid-cols-2 gap-16 items-center">
                 <div>
                   <motion.h2
-                    className="text-5xl font-bold text-white mb-8"
+                    className="text-5xl font-bold text-white mb-8 text-balance"
                     initial={{ x: -50, opacity: 0 }}
                     whileInView={{ x: 0, opacity: 1 }}
                     viewport={{ once: true }}
@@ -186,7 +187,7 @@ export default function Home() {
                     立体的に見える
                   </motion.h2>
                   <motion.p
-                    className="text-xl text-gray-300 mb-8 leading-relaxed"
+                    className="text-xl text-gray-300 mb-8 leading-relaxed text-pretty"
                     initial={{ x: -50, opacity: 0 }}
                     whileInView={{ x: 0, opacity: 1 }}
                     viewport={{ once: true }}
@@ -207,7 +208,7 @@ export default function Home() {
 
           {/* Final CTA Section */}
           <div className="snap-start bg-[#1A1B23]">
-            <section className="snap-start h-screen w-full flex items-center justify-center relative overflow-hidden">
+            <section className="snap-start h-dvh w-full flex items-center justify-center relative overflow-hidden">
               <FloatingElements />
               <div className="absolute inset-0 bg-gradient-radial from-[#1A1B23] to-[#232429]" />
               <div className="max-w-4xl mx-auto px-4 text-center z-10">
@@ -217,7 +218,7 @@ export default function Home() {
                   viewport={{ once: true }}
                   className="space-y-8"
                 >
-                  <h2 className="text-5xl font-bold text-white mb-8">
+                  <h2 className="text-5xl font-bold text-white mb-8 text-balance">
                     あなたの知識を、新たな次元へ
                   </h2>
                   <p className="text-xl text-gray-300 mb-12">
@@ -294,7 +295,7 @@ const SplashScreen = () => {
           document.getElementById('splash-screen')?.classList.add('hidden');
         }
       }}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1A1B23]"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#1A1B23]"
       id="splash-screen"
     >
       <motion.div
@@ -364,19 +365,12 @@ const Header = ({ scrollProgress }: HeaderProps) => {
           BANSHO
         </Link>
         <div className="flex gap-4">
-          <Link
-            href="/login"
-            className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
-          >
-            ログイン
-          </Link>
-          <Link
-            href="/register"
-            className="px-4 py-2 bg-[#7B8CDE] text-white rounded-lg hover:bg-[#8E9DE5] 
-              transition-all duration-300 hover:scale-105"
-          >
-            アカウント作成
-          </Link>
+          <Button asChild variant="ghost">
+            <Link href="/login">ログイン</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/register">アカウント作成</Link>
+          </Button>
         </div>
       </nav>
     </motion.header>
@@ -516,15 +510,12 @@ const ThreeDVisualization = () => (
 
 const StartButton = () => (
   <div className="flex justify-center gap-4">
-    <Link
-      href="/register"
-      className="px-8 py-4 bg-[#7B8CDE] text-white rounded-lg font-medium 
-        hover:bg-[#8E9DE5] transition-all duration-300 hover:scale-105
-        flex items-center"
-    >
-      今すぐ始める
-      <ArrowRight className="ml-2" />
-    </Link>
+    <Button asChild size="lg">
+      <Link href="/register">
+        今すぐ始める
+        <ArrowRight className="ml-2 size-4" />
+      </Link>
+    </Button>
   </div>
 );
 
