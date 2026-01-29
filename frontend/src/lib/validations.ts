@@ -1,74 +1,109 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Auth validations
 export const registerSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email('Invalid email address'),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(100, "Password must be less than 100 characters"),
-  name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+    .min(8, 'Password must be at least 8 characters')
+    .max(100, 'Password must be less than 100 characters'),
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
 });
 
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 // Document validations
 export const createDocumentSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters"),
-  content: z.string().default(""),
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters'),
+  content: z.string().default(''),
   tags: z.array(z.string()).optional(),
 });
 
 export const updateDocumentSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200, "Title must be less than 200 characters").optional(),
+  title: z
+    .string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be less than 200 characters')
+    .optional(),
   content: z.string().optional(),
   tags: z.array(z.string()).optional(),
 });
 
 export const searchDocumentSchema = z.object({
-  q: z.string().min(1, "Search query is required").max(200, "Query must be less than 200 characters"),
+  q: z
+    .string()
+    .min(1, 'Search query is required')
+    .max(200, 'Query must be less than 200 characters'),
 });
 
 // Profile validations
 export const updateProfileSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters").optional(),
-  avatar: z.string().url("Invalid URL").optional().nullable(),
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(100, 'Name must be less than 100 characters')
+    .optional(),
+  avatar: z.string().url('Invalid URL').optional().nullable(),
 });
 
 // Relations validations
 export const relationsSchema = z.object({
-  documentIds: z.array(z.number().int().positive()).min(2, "At least 2 documents required"),
+  documentIds: z.array(z.number().int().positive()).min(2, 'At least 2 documents required'),
 });
 
 // Ask validations
 export const askSchema = z.object({
-  question: z.string().min(1, "Question is required").max(1000, "Question must be less than 1000 characters"),
+  question: z
+    .string()
+    .min(1, 'Question is required')
+    .max(1000, 'Question must be less than 1000 characters'),
   documentIds: z.array(z.number().int().positive()).optional(),
 });
 
 // Password reset validations
 export const forgotPasswordSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email('Invalid email address'),
 });
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(1, "Token is required"),
+  token: z.string().min(1, 'Token is required'),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(100, "Password must be less than 100 characters"),
+    .min(8, 'Password must be at least 8 characters')
+    .max(100, 'Password must be less than 100 characters'),
 });
 
 // Password change validations
 export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
+  currentPassword: z.string().min(1, 'Current password is required'),
   newPassword: z
     .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(100, "Password must be less than 100 characters"),
+    .min(8, 'Password must be at least 8 characters')
+    .max(100, 'Password must be less than 100 characters'),
+});
+
+// Import validations
+export const importFileSchema = z.object({
+  filename: z.string().min(1, 'Filename is required').endsWith('.md', 'File must be a .md file'),
+  content: z.string(),
+});
+
+export const importResultSchema = z.object({
+  success: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+    })
+  ),
+  failed: z.array(
+    z.object({
+      filename: z.string(),
+      error: z.string(),
+    })
+  ),
 });
 
 // Type exports
@@ -83,3 +118,5 @@ export type AskInput = z.infer<typeof askSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+export type ImportFileInput = z.infer<typeof importFileSchema>;
+export type ImportResult = z.infer<typeof importResultSchema>;

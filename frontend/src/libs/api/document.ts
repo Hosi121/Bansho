@@ -160,3 +160,32 @@ export async function calculateRelation(doc1: string, doc2: string): Promise<num
   const data = await response.json();
   return data.relation;
 }
+
+// Markdownファイルをインポート
+export interface ImportResult {
+  success: { id: string; title: string }[];
+  failed: { filename: string; error: string }[];
+}
+
+export async function importMarkdownFiles(files: File[]): Promise<ImportResult> {
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append('files', file);
+  }
+
+  const response = await fetch('/api/documents/import', {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to import documents');
+  }
+
+  return response.json();
+}
