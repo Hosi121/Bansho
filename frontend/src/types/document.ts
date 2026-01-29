@@ -5,6 +5,7 @@ export interface Document {
   createdAt: Date;
   updatedAt: Date;
   tags: string[];
+  isPinned?: boolean;
   excerpt?: string;
   matchType?: 'title' | 'content' | 'tag';
   matchStart?: number;
