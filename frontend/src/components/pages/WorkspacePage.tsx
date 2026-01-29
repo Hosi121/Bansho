@@ -1,30 +1,36 @@
 'use client';
 
 import { Menu, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import AppLayout from '@/components/common/layout/AppLayout';
 import { Button } from '@/components/ui/button';
+import { BulkActionBar } from '@/components/workspace/BulkActionBar';
 import DocumentList from '@/components/workspace/DocumentList';
 import KnowledgeGraph from '@/components/workspace/KnowledgeGraph';
 import { cn } from '@/lib/utils';
 import { useDocuments } from '@/libs/hooks/useDocuments';
-import type { Document, DocumentGraphData } from '@/types/document';
-
-interface WorkspaceData {
-  documents: Document[];
-  graphData: DocumentGraphData;
-  selectedDocumentId: string | null;
-  isLoading: boolean;
-  fetchDocuments: () => Promise<void>;
-  selectDocument: (id: string) => void;
-}
+import { useFolders } from '@/libs/hooks/useFolders';
 
 const WorkspacePage = () => {
-  const { documents, graphData, selectedDocumentId, fetchDocuments, selectDocument } =
-    useDocuments() as WorkspaceData;
+  const {
+    documents,
+    graphData,
+    selectedDocumentId,
+    selectedIds,
+    isLoading,
+    fetchDocuments,
+    selectDocument,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    bulkMove,
+    bulkDelete,
+  } = useDocuments();
 
+  const { folders } = useFolders();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -52,6 +58,18 @@ const WorkspacePage = () => {
     }
   };
 
+  // Enable selection mode when there are selections
+  useEffect(() => {
+    if (selectedIds.size > 0) {
+      setSelectionMode(true);
+    }
+  }, [selectedIds.size]);
+
+  const handleClearSelection = () => {
+    clearSelection();
+    setSelectionMode(false);
+  };
+
   return (
     <AppLayout>
       <div className="h-[calc(100dvh-3rem)] relative">
@@ -77,8 +95,11 @@ const WorkspacePage = () => {
             <DocumentList
               documents={documents}
               selectedId={selectedDocumentId}
+              selectedIds={selectedIds}
+              selectionMode={selectionMode}
               onSelect={handleDocumentSelect}
               onPinToggle={fetchDocuments}
+              onToggleSelection={toggleSelection}
               isMobile={isMobile}
             />
           </aside>
@@ -105,6 +126,17 @@ const WorkspacePage = () => {
             </div>
           </main>
         </div>
+
+        <BulkActionBar
+          selectedCount={selectedIds.size}
+          totalCount={documents.length}
+          folders={folders}
+          onSelectAll={selectAll}
+          onClearSelection={handleClearSelection}
+          onMove={bulkMove}
+          onDelete={bulkDelete}
+          isLoading={isLoading}
+        />
       </div>
     </AppLayout>
   );
