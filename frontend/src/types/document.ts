@@ -6,6 +6,9 @@ export interface Document {
   updatedAt: Date;
   tags: string[];
   excerpt?: string;
+  matchType?: 'title' | 'content' | 'tag';
+  matchStart?: number;
+  matchEnd?: number;
 }
 
 export interface DocumentNode {
@@ -23,7 +26,7 @@ export interface DocumentEdge {
   id: string;
   sourceId: string;
   targetId: string;
-  strength: number;  // 関連度を表す値（0-1）
+  strength: number; // 関連度を表す値（0-1）
 }
 
 export interface DocumentGraphData {
