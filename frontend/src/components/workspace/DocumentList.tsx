@@ -4,6 +4,7 @@ import { File, Pin, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FolderTree } from '@/components/workspace/FolderTree';
 import { cn } from '@/lib/utils';
 import { useFolders } from '@/libs/hooks/useFolders';
@@ -12,16 +13,22 @@ import type { Document } from '@/types/document';
 interface DocumentListProps {
   documents: Document[];
   selectedId: string | null;
+  selectedIds?: Set<string>;
+  selectionMode?: boolean;
   onSelect: (id: string) => void;
   onPinToggle?: (id: string) => void;
+  onToggleSelection?: (id: string) => void;
   isMobile: boolean;
 }
 
 const DocumentList = ({
   documents,
   selectedId,
+  selectedIds = new Set(),
+  selectionMode = false,
   onSelect,
   onPinToggle,
+  onToggleSelection,
   isMobile,
 }: DocumentListProps) => {
   const router = useRouter();
@@ -96,13 +103,22 @@ const DocumentList = ({
           </div>
           <div className="space-y-1">
             {filteredDocuments.map((doc) => (
-              <div key={doc.id} className="group relative">
+              <div key={doc.id} className="group relative flex items-center">
+                {selectionMode && (
+                  <Checkbox
+                    checked={selectedIds.has(doc.id)}
+                    onCheckedChange={() => onToggleSelection?.(doc.id)}
+                    className="ml-2 mr-1"
+                    aria-label={`${doc.title}を選択`}
+                  />
+                )}
                 <Button
                   variant={selectedId === doc.id ? 'secondary' : 'ghost'}
                   onClick={() => onSelect(doc.id)}
                   className={cn(
-                    'w-full justify-start h-auto py-2 pr-10',
-                    selectedId === doc.id && 'bg-primary/20'
+                    'flex-1 justify-start h-auto py-2 pr-10',
+                    selectedId === doc.id && 'bg-primary/20',
+                    selectedIds.has(doc.id) && 'bg-primary/10'
                   )}
                 >
                   <File
@@ -125,24 +141,26 @@ const DocumentList = ({
                     </div>
                   </div>
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    'absolute right-1 top-1/2 -translate-y-1/2 size-7 opacity-0 group-hover:opacity-100 transition-opacity',
-                    doc.isPinned && 'opacity-100'
-                  )}
-                  onClick={(e) => handlePinToggle(e, doc.id)}
-                  disabled={pinningId === doc.id}
-                  title={doc.isPinned ? 'ピン留めを解除' : 'ピン留め'}
-                >
-                  <Pin
+                {!selectionMode && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     className={cn(
-                      'size-4',
-                      doc.isPinned ? 'text-primary fill-primary' : 'text-muted-foreground'
+                      'absolute right-1 top-1/2 -translate-y-1/2 size-7 opacity-0 group-hover:opacity-100 transition-opacity',
+                      doc.isPinned && 'opacity-100'
                     )}
-                  />
-                </Button>
+                    onClick={(e) => handlePinToggle(e, doc.id)}
+                    disabled={pinningId === doc.id}
+                    title={doc.isPinned ? 'ピン留めを解除' : 'ピン留め'}
+                  >
+                    <Pin
+                      className={cn(
+                        'size-4',
+                        doc.isPinned ? 'text-primary fill-primary' : 'text-muted-foreground'
+                      )}
+                    />
+                  </Button>
+                )}
               </div>
             ))}
           </div>
